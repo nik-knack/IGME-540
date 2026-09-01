@@ -38,7 +38,10 @@ int WINAPI WinMain(
 	_In_ LPSTR lpCmdLine,				// Command line params
 	_In_ int nCmdShow)					// How the window should be shown (we ignore this)
 {
-#if defined(DEBUG) | defined(_DEBUG)
+#if defined(DEBUG) | defined(_DEBUG)	// Preprosessor director: processes the source code before compilation begins, ex. #include
+										// Determines what we need before compiling code
+										// Debug mode compiles code as is
+										// Release mode optimizes the code (i.e. remove, skip, rearrange code)
 	// Enable memory leak detection as a quick and dirty
 	// way of determining if we forgot to clean something up
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -82,7 +85,7 @@ int WINAPI WinMain(
 	game = new Game();
 
 	// Time tracking
-	LARGE_INTEGER perfFreq{};
+	LARGE_INTEGER perfFreq{};	// Var type is required for QueryPerformanceFrequency function
 	double perfSeconds = 0;
 	__int64 startTime = 0;
 	__int64 currentTime = 0;
@@ -113,7 +116,7 @@ int WINAPI WinMain(
 		{
 			// Calculate up-to-date timing info
 			QueryPerformanceCounter((LARGE_INTEGER*)&currentTime);
-			float deltaTime = max((float)((currentTime - previousTime) * perfSeconds), 0.0f);
+			float deltaTime = max((float)((currentTime - previousTime) * perfSeconds), 0.0f);	// Prevent deltaTime from going negative (i.e. energy modes)
 			float totalTime = (float)((currentTime - startTime) * perfSeconds);
 			previousTime = currentTime;
 

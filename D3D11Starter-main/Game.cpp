@@ -23,7 +23,7 @@ Game::Game()
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
-	LoadShaders();
+	LoadShaders();				// May adjust as see fit in the future
 	CreateGeometry();
 
 	// Set initial graphics API state
@@ -58,7 +58,7 @@ Game::Game()
 // --------------------------------------------------------
 Game::~Game()
 {
-
+	// May use later
 }
 
 
@@ -232,7 +232,7 @@ void Game::CreateGeometry()
 // --------------------------------------------------------
 void Game::OnResize()
 {
-	
+	printf("Resize\n");
 }
 
 
