@@ -17,6 +17,13 @@ public:
 	void Draw(float deltaTime, float totalTime);
 	void OnResize();
 
+	// Initialization of UI helper functions
+	void ImGuiUpdate(float deltaTime);
+
+	bool showDemoWindow;
+	bool isChecked;
+	int number;
+
 private:
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.

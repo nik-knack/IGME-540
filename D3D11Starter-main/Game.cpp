@@ -20,12 +20,24 @@
 // For the DirectX Math library
 using namespace DirectX;
 
+
 // --------------------------------------------------------
 // The constructor is called after the window and graphics API
 // are initialized but before the game loop begins
 // --------------------------------------------------------
 Game::Game()
 {
+	// Initialize ImGui itself & platform / renderer backends
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui_ImplWin32_Init(Window::Handle());
+	ImGui_ImplDX11_Init(Graphics::Device.Get(), Graphics::Context.Get());
+	// Pick a style (uncomment one of these 3)
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
+	//ImGui::StyleColorsClassic();
+
+	
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
@@ -52,17 +64,7 @@ Game::Game()
 		//    these calls will need to happen multiple times per frame
 		Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 		Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
-	}
-
-	// Initialize ImGui itself & platform/renderer backends
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui_ImplWin32_Init(Window::Handle());
-	ImGui_ImplDX11_Init(Graphics::Device.Get(), Graphics::Context.Get());
-	// Pick a style (uncomment one of these 3)
-	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsLight();
-	//ImGui::StyleColorsClassic();
+	}	
 }
 
 
@@ -255,48 +257,41 @@ void Game::OnResize()
 }
 
 
-// ImGui Helper Method
-void ImGuiUpdate(float deltaTime) {
-	// Feed fresh data to ImGui
-	ImGuiIO& io = ImGui::GetIO();
-	io.DeltaTime = deltaTime;
-	io.DisplaySize.x = (float)Window::Width();
-	io.DisplaySize.y = (float)Window::Height();
-	// Reset the frame
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-	// Determine new input capture
-	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
-	Input::SetMouseCapture(io.WantCaptureMouse);
-	// Show the demo window
-	ImGui::ShowDemoWindow();
-}
-
 // --------------------------------------------------------
 // Update your game here - user input, move objects, AI, etc.
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
 	// Call helper method to update ImGui
-	ImGuiUpdate(deltaTime);
+	Game::ImGuiUpdate(deltaTime);
 
-	ImGui::Begin("Inspector"); // Everything after is part of the windo
-
-	// Replace the %f with the next parameter, and format as a float
-	ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
-	// Replace each %d with the next parameter, and format as decimal integers
-	// The "x" will be printed as-is between the numbers, like so: 800x600
-	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
-
-	XMFLOAT4 color(1.0f, 0.0f, 0.5f, 1.0f);
-	ImGui::ColorEdit4("RGBA color editor", &color.x);
-
-	// Create a button and test for a click
-	if (ImGui::Button("Show ImGui Demo Window"))
+	if (showDemoWindow)
 	{
-		
+		ImGui::ShowDemoWindow();
 	}
+
+	// Create listbox variables
+	static const char* items[]{ "Kirby", "Waddle Dee", "Meta Knight" };
+	static int selectedItem = 0;
+
+	ImGui::Begin("Inspector"); // Everything after is part of the window
+	ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
+	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
+	//ImGui::ColorEdit4("RGBA color editor", &color.x);
+
+
+	if (showDemoWindow) {
+		ImGui::Button("Show ImGui Demo Window");
+		showDemoWindow != showDemoWindow;
+	}
+	else {
+		ImGui::Button("Hide ImGui Demo Window");
+		showDemoWindow != showDemoWindow;
+	}
+
+	ImGui::SliderInt("Choose a number", &number, 0, 100);
+	ImGui::Checkbox("Check Please", &isChecked);
+	ImGui::ListBox("Characters", &selectedItem, items, IM_ARRAYSIZE(items));
 
 	ImGui::End(); // Ends the current window
 
@@ -351,10 +346,11 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - These should happen exactly ONCE PER FRAME
 	// - At the very end of the frame (after drawing *everything*)
 	{
-		// Present at the end of the frame
-		bool vsync = Graphics::VsyncState();
 		ImGui::Render(); // Turns this frame’s UI into renderable triangles
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
+		
+		// Present at the end of the frame
+		bool vsync = Graphics::VsyncState();
 		Graphics::SwapChain->Present(
 			vsync ? 1 : 0,
 			vsync ? 0 : DXGI_PRESENT_ALLOW_TEARING);
@@ -365,6 +361,25 @@ void Game::Draw(float deltaTime, float totalTime)
 			Graphics::BackBufferRTV.GetAddressOf(),
 			Graphics::DepthBufferDSV.Get());
 	}
+}
+
+// ImGui Helper Method	
+// Updates the UI every frame
+void Game::ImGuiUpdate(float deltaTime) {
+	// Feed fresh data to ImGui
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = deltaTime;
+	io.DisplaySize.x = (float)Window::Width();
+	io.DisplaySize.y = (float)Window::Height();
+	// Reset the frame
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	// Determine new input capture
+	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
+	Input::SetMouseCapture(io.WantCaptureMouse);
+	// Show the demo window
+	ImGui::ShowDemoWindow();
 }
 
 
