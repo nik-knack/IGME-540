@@ -274,10 +274,9 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
 	ImGui::ColorEdit4("RGBA color editor", color);
 
-
 	if (ImGui::Button(showDemoWindow
-		? "Show ImGui Demo Window"
-		: "Hide ImGui Demo Window"))
+		? "Hide ImGui Demo Window"
+		: "Show ImGui Demo Window"))
 	{
 		showDemoWindow = !showDemoWindow;
 	}
