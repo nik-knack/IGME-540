@@ -265,11 +265,6 @@ void Game::Update(float deltaTime, float totalTime)
 	// Call helper method to update ImGui
 	Game::ImGuiUpdate(deltaTime);
 
-	if (showDemoWindow)
-	{
-		ImGui::ShowDemoWindow();
-	}
-
 	// Create listbox variables
 	static const char* items[]{ "Kirby", "Waddle Dee", "Meta Knight" };
 	static int selectedItem = 0;
@@ -277,16 +272,14 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::Begin("Inspector"); // Everything after is part of the window
 	ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
 	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
-	//ImGui::ColorEdit4("RGBA color editor", &color.x);
+	ImGui::ColorEdit4("RGBA color editor", color);
 
 
-	if (showDemoWindow) {
-		ImGui::Button("Show ImGui Demo Window");
-		showDemoWindow != showDemoWindow;
-	}
-	else {
-		ImGui::Button("Hide ImGui Demo Window");
-		showDemoWindow != showDemoWindow;
+	if (ImGui::Button(showDemoWindow
+		? "Show ImGui Demo Window"
+		: "Hide ImGui Demo Window"))
+	{
+		showDemoWindow = !showDemoWindow;
 	}
 
 	ImGui::SliderInt("Choose a number", &number, 0, 100);
@@ -294,6 +287,11 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::ListBox("Characters", &selectedItem, items, IM_ARRAYSIZE(items));
 
 	ImGui::End(); // Ends the current window
+
+	if (showDemoWindow)
+	{
+		ImGui::ShowDemoWindow();
+	}
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
@@ -311,7 +309,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
 		// Clear the back buffer (erase what's on screen) and depth buffer
-		const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+		//const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	color);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}

@@ -20,9 +20,10 @@ public:
 	// Initialization of UI helper functions
 	void ImGuiUpdate(float deltaTime);
 
-	bool showDemoWindow;
-	bool isChecked;
-	int number;
+	bool showDemoWindow = true;
+	bool isChecked = false;
+	int number = 0;
+	float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
 private:
 
