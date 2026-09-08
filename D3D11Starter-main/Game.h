@@ -31,6 +31,9 @@ private:
 	void LoadShaders();
 	void CreateGeometry();
 
+	// Store meshes in pointers, something like this
+	//std::vector<std::shared_ptr<Mesh>> meshes;
+
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
 	//     Component Object Model, which DirectX objects do
