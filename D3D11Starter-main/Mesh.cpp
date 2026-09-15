@@ -3,6 +3,9 @@
 
 using namespace DirectX;
 
+// --------------------------------------------------------
+// Constructor 
+// --------------------------------------------------------
 Mesh::Mesh(const Vertex* vertices, unsigned int vertexCount, const unsigned int* indices, unsigned int indexCount)
 	: vertexCount(vertexCount), indexCount(indexCount)
 {	
@@ -45,31 +48,49 @@ Mesh::Mesh(const Vertex* vertices, unsigned int vertexCount, const unsigned int*
 	}
 }
 
+// --------------------------------------------------------
+// Destructor
+// --------------------------------------------------------
 Mesh::~Mesh()
 {
 	// Leave this empty
 }
 
+// --------------------------------------------------------
+// Vertex Buffer
+// --------------------------------------------------------
 Microsoft::WRL::ComPtr<ID3D11Buffer> Mesh::GetVertexBufer()
 {
 	return vertexBuffer.Get();
 }
 
+// --------------------------------------------------------
+// Index Buffer
+// --------------------------------------------------------
 Microsoft::WRL::ComPtr<ID3D11Buffer> Mesh::GetIndexBuffer()
 {
 	return indexBuffer.Get();
 }
 
+// --------------------------------------------------------
+// Helper function to get the number of verticces
+// --------------------------------------------------------
 unsigned int Mesh::GetVertexCount()
 {
 	return vertexCount;
 }
 
+// --------------------------------------------------------
+// Helper function to get number of indices
+// --------------------------------------------------------
 unsigned int Mesh::GetIndexCount()
 {
 	return indexCount;
 }
 
+// --------------------------------------------------------
+// Draws using the indices
+// --------------------------------------------------------
 void Mesh::Draw()
 {
 	// DRAW geometry

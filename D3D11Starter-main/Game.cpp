@@ -270,15 +270,39 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 
 	ImGui::Begin("Inspector"); // Everything after is part of the window
-	ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
-	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
-	ImGui::ColorEdit4("RGBA color editor", color);
+	
+	if (ImGui::TreeNode("App Details")) {
+		ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
+		ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
+		ImGui::TreePop();
+		if (ImGui::Button(showDemoWindow
+			? "Hide ImGui Demo Window"
+			: "Show ImGui Demo Window"))
+		{
+			showDemoWindow = !showDemoWindow;
+		}
+	}
 
-	if (ImGui::Button(showDemoWindow
-		? "Hide ImGui Demo Window"
-		: "Show ImGui Demo Window"))
-	{
-		showDemoWindow = !showDemoWindow;
+	if (ImGui::TreeNode("Meshes")) {
+		if (ImGui::TreeNode("Triangle")) {
+			ImGui::Text("Triangles: %d", meshes[0]->GetIndexCount() / 3);
+			ImGui::Text("Vertices: %d", meshes[0]->GetVertexCount());
+			ImGui::Text("Indices: %d", meshes[0]->GetIndexCount());
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Square")) {
+			ImGui::Text("Triangles: %d", meshes[1]->GetIndexCount() / 3);
+			ImGui::Text("Vertices: %d", meshes[1]->GetVertexCount());
+			ImGui::Text("Indices: %d", meshes[1]->GetIndexCount());
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Pentagon")) {
+			ImGui::Text("Triangles: %d", meshes[2]->GetIndexCount() / 3);
+			ImGui::Text("Vertices: %d", meshes[2]->GetVertexCount());
+			ImGui::Text("Indices: %d", meshes[2]->GetIndexCount());
+			ImGui::TreePop();
+		}
+		ImGui::TreePop();
 	}
 
 	ImGui::End(); // Ends the current window
@@ -307,7 +331,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Draw new mesh 
 	for (const auto& mesh : meshes)
 	{
-		mesh->Draw();
+		mesh->Mesh::Draw();
 	}
 
 	// Frame END
