@@ -269,6 +269,11 @@ void Game::Update(float deltaTime, float totalTime)
 	static const char* items[]{ "Kirby", "Waddle Dee", "Meta Knight" };
 	static int selectedItem = 0;
 
+	if (showDemoWindow)
+	{
+		ImGui::ShowDemoWindow();
+	}
+
 	ImGui::Begin("Inspector"); // Everything after is part of the window
 	ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
 	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
@@ -286,11 +291,6 @@ void Game::Update(float deltaTime, float totalTime)
 	ImGui::ListBox("Characters", &selectedItem, items, IM_ARRAYSIZE(items));
 
 	ImGui::End(); // Ends the current window
-
-	if (showDemoWindow)
-	{
-		ImGui::ShowDemoWindow();
-	}
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
@@ -375,8 +375,6 @@ void Game::ImGuiUpdate(float deltaTime) {
 	// Determine new input capture
 	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
 	Input::SetMouseCapture(io.WantCaptureMouse);
-	// Show the demo window
-	ImGui::ShowDemoWindow();
 }
 
 
