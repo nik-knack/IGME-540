@@ -2,6 +2,9 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
+#include <vector>
+#include <memory>
+#include "Mesh.h"
 
 class Game
 {
@@ -31,8 +34,8 @@ private:
 	void LoadShaders();
 	void CreateGeometry();
 
-	// Store meshes in pointers, something like this
-	//std::vector<std::shared_ptr<Mesh>> meshes;
+	// Store meshes in a vector of smart pointers
+	std::vector<std::shared_ptr<Mesh>> meshes;
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
