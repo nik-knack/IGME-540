@@ -44,6 +44,30 @@ Game::Game()
 	LoadShaders();				// May adjust as see fit in the future
 	CreateGeometry();
 
+	// Vertex Shader Data
+	vertexShaderData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	vertexShaderData.offset = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	// Creating the constant buffer
+	D3D11_BUFFER_DESC constantBufferDesc = {};
+	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constantBufferDesc.ByteWidth = sizeof(VertexShaderData);
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;			
+
+	Graphics::Device->CreateBuffer(
+		&constantBufferDesc,
+		nullptr,
+		vertexShaderConstantBuffer.GetAddressOf()
+	);
+
+	// Bind the constant buffer to the vertex shader
+	Graphics::Context->VSSetConstantBuffers(
+		0,										
+		1,										
+		vertexShaderConstantBuffer.GetAddressOf() 
+	);
+
 	// Set initial graphics API state
 	//  - These settings persist until we change them
 	//  - Some of these, like the primitive topology & input layout, probably won't change
@@ -305,6 +329,13 @@ void Game::Update(float deltaTime, float totalTime)
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Vertex Shader Data")) {
+		ImGui::ColorEdit4(
+			"Color Tint", &vertexShaderData.colorTint.x);
+		ImGui::DragFloat3("Offset", &vertexShaderData.offset.x, 0.01f);
+		ImGui::TreePop();	
+	}
+
 	ImGui::End(); // Ends the current window
 
 	// Example input checking: Quit if the escape key is pressed
@@ -327,6 +358,28 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	color);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
+
+	// Map -> memcpy -> Unmap sequence
+	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+
+	Graphics::Context->Map(
+		vertexShaderConstantBuffer.Get(),	
+		0,									
+		D3D11_MAP_WRITE_DISCARD,			
+		0,									
+		&mappedBuffer						
+	);
+
+	memcpy(
+		mappedBuffer.pData,
+		&vertexShaderData,
+		sizeof(VertexShaderData)
+	);
+
+	Graphics::Context->Unmap(
+		vertexShaderConstantBuffer.Get(),
+		0
+	);
 
 	// Draw new mesh 
 	for (const auto& mesh : meshes)
@@ -355,6 +408,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 }
 
+// ImGui Helper Method	
 // ImGui Helper Method	
 // Updates the UI every frame
 void Game::ImGuiUpdate(float deltaTime) {

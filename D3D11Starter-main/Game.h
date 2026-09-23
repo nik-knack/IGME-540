@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include "Mesh.h"
+#include "BufferStructs.h"
 
 class Game
 {
@@ -28,6 +29,9 @@ public:
 	int number = 0;
 	float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
+	// Store Vertex Shader Data
+	VertexShaderData vertexShaderData;
+
 private:
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
@@ -50,5 +54,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
+
+	// Constant buffer to hold data for the vertex shader
+	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexShaderConstantBuffer;
 };
 
