@@ -124,15 +124,18 @@ DirectX::XMFLOAT4X4 Transform::GetWorldMatrix()
 {
 	if (dirty) {
 		
-		XMMATRIX scaleMatrix = XMMatrixScaling(scale.x, scale.y, scale.z);
-		XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
-		XMMATRIX translationMatrix = XMMatrixTranslation(position.x, position.y, position.z);
+		XMMATRIX scaleMatrix = XMMatrixScaling(
+			scale.x, scale.y, scale.z);
+		XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(
+			rotation.x, rotation.y, rotation.z);
+		XMMATRIX translationMatrix = XMMatrixTranslation(
+			position.x, position.y, position.z);
 
 		XMMATRIX worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
 		XMStoreFloat4x4(&world, worldMatrix);
 		XMStoreFloat4x4(
 			&worldInverseTranspose,
-			XMMatrixInverse(nullptr, XMMatrixTranspose(worldMatrix))
+			XMMatrixInverse(0, XMMatrixTranspose(worldMatrix))
 		);
 
 		dirty = false;
