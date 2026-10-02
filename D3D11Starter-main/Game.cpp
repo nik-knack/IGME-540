@@ -44,9 +44,25 @@ Game::Game()
 	LoadShaders();				// May adjust as see fit in the future
 	CreateGeometry();
 
+	// Creating game entity
+	entities.push_back(std::make_shared<GameEntity>(meshes[0]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[1]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[1]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[2]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[2]));
+
+	assert(entities.size() == 5);
+
+	// Give each entity a different position
+	entities[0]->GetTransform()->SetPosition(0.0f, 0.0f, 0.0f);
+	entities[1]->GetTransform()->SetPosition(0.2f, 0.2f, 0.0f);
+	entities[2]->GetTransform()->SetPosition(-0.5f, -0.3f, 0.0f);
+	entities[3]->GetTransform()->SetPosition(0.5f, -0.5f, 0.0f);
+	entities[4]->GetTransform()->SetPosition(0.3f, 0.4f, 0.0f);
+
 	// Vertex Shader Data
 	vertexShaderData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	vertexShaderData.offset = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
 
 	// Creating the constant buffer
 	D3D11_BUFFER_DESC constantBufferDesc = {};
@@ -201,6 +217,7 @@ void Game::CreateGeometry()
 	// Create triangle indices
 	unsigned int triangleIndices[] = { 0, 1, 2 };
 
+
 	// Add to mesh vertex
 	meshes.push_back(
 		std::make_shared<Mesh>(
@@ -255,16 +272,15 @@ void Game::CreateGeometry()
 	{
 		0, 1, 2,
 		0, 2, 3,
-		0, 3, 4,
-		0, 4, 5
+		0, 3, 4
 	};
 
 	meshes.push_back(
 		std::make_shared<Mesh>(
 			pentagonVertices,
-			6,
+			5,
 			pentagonIndices,
-			12
+			9
 		)
 	);
 }
@@ -307,33 +323,37 @@ void Game::Update(float deltaTime, float totalTime)
 		}
 	}
 
-	if (ImGui::TreeNode("Meshes")) {
-		if (ImGui::TreeNode("Triangle")) {
-			ImGui::Text("Triangles: %d", meshes[0]->GetIndexCount() / 3);
-			ImGui::Text("Vertices: %d", meshes[0]->GetVertexCount());
-			ImGui::Text("Indices: %d", meshes[0]->GetIndexCount());
-			ImGui::TreePop();
-		}
-		if (ImGui::TreeNode("Square")) {
-			ImGui::Text("Triangles: %d", meshes[1]->GetIndexCount() / 3);
-			ImGui::Text("Vertices: %d", meshes[1]->GetVertexCount());
-			ImGui::Text("Indices: %d", meshes[1]->GetIndexCount());
-			ImGui::TreePop();
-		}
-		if (ImGui::TreeNode("Pentagon")) {
-			ImGui::Text("Triangles: %d", meshes[2]->GetIndexCount() / 3);
-			ImGui::Text("Vertices: %d", meshes[2]->GetVertexCount());
-			ImGui::Text("Indices: %d", meshes[2]->GetIndexCount());
-			ImGui::TreePop();
-		}
-		ImGui::TreePop();
-	}
+	for (int i = 0; i < entities.size(); i++) 
+	{
+		ImGui::PushID(i);
 
-	if (ImGui::TreeNode("Vertex Shader Data")) {
-		ImGui::ColorEdit4(
-			"Color Tint", &vertexShaderData.colorTint.x);
-		ImGui::DragFloat3("Offset", &vertexShaderData.offset.x, 0.01f);
-		ImGui::TreePop();	
+		std::string entityName = "Entity " + std::to_string(i + 1);
+
+		if (ImGui::TreeNode(entityName.c_str())) 
+		{
+			Transform* transform = entities[i]->GetTransform();
+			XMFLOAT3 position = transform->GetPosition();
+			XMFLOAT3 rotation = transform->GetRotation();
+			XMFLOAT3 scale = transform->GetScale();
+
+			if (ImGui::DragFloat3("Position", &position.x, 0.1f))
+			{
+				transform->SetPosition(position);
+			}
+
+			if (ImGui::DragFloat3("Rotation", &rotation.x, 0.1f))
+			{
+				transform->SetRotation(rotation);
+			}
+
+			if (ImGui::DragFloat3("Scale", &scale.x, 0.1f))
+			{
+				transform->SetScale(scale);
+			}
+
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
 	}
 
 	ImGui::End(); // Ends the current window
@@ -359,33 +379,37 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	// Map -> memcpy -> Unmap sequence
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-
-	Graphics::Context->Map(
-		vertexShaderConstantBuffer.Get(),	
-		0,									
-		D3D11_MAP_WRITE_DISCARD,			
-		0,									
-		&mappedBuffer						
-	);
-
-	memcpy(
-		mappedBuffer.pData,
-		&vertexShaderData,
-		sizeof(VertexShaderData)
-	);
-
-	Graphics::Context->Unmap(
-		vertexShaderConstantBuffer.Get(),
-		0
-	);
-
-	// Draw new mesh 
-	for (const auto& mesh : meshes)
+	// Draw each game entity
+	for (const auto& entity : entities)
 	{
-		mesh->Mesh::Draw();
-	}
+		// Get the entity's mesh and transform
+		vertexShaderData.world = entity->GetTransform()->GetWorldMatrix();
+
+		// Map -> memcpy -> Unmap sequence
+		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+
+		Graphics::Context->Map(
+			vertexShaderConstantBuffer.Get(),	
+			0,									
+			D3D11_MAP_WRITE_DISCARD,			
+			0,									
+			&mappedBuffer						
+		);
+
+		memcpy(
+			mappedBuffer.pData,
+			&vertexShaderData,
+			sizeof(VertexShaderData)
+		);
+
+		Graphics::Context->Unmap(
+			vertexShaderConstantBuffer.Get(),
+			0
+		);
+
+		entity->Draw();
+	}	
+
 
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME

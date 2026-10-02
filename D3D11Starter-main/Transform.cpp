@@ -6,7 +6,7 @@ Transform::Transform() :
 	position(0, 0, 0),
 	rotation(0, 0, 0),
 	scale(1, 1, 1),
-	dirty(true)
+	dirty(false)
 {
 	XMStoreFloat4x4(&world,XMMatrixIdentity());
 	XMStoreFloat4x4(&worldInverseTranspose, XMMatrixIdentity());
@@ -64,7 +64,7 @@ void Transform::Scale(DirectX::XMFLOAT3 scale)
 {
 	this->scale.x *= scale.x;
 	this->scale.y *= scale.y;	
-	this->scale.z += scale.z;
+	this->scale.z *= scale.z;
 
 	dirty = true;
 }

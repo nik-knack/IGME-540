@@ -6,6 +6,7 @@
 #include <memory>
 #include "Mesh.h"
 #include "BufferStructs.h"
+#include "GameEntity.h"
 
 class Game
 {
@@ -40,6 +41,9 @@ private:
 
 	// Store meshes in a vector of smart pointers
 	std::vector<std::shared_ptr<Mesh>> meshes;
+
+	// The store those meshes in a vector of game entities
+	std::vector<std::shared_ptr<GameEntity>> entities;
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the

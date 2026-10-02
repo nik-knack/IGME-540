@@ -2,7 +2,7 @@
 cbuffer VertexShaderData : register(b0)
 {
     float4 colorTint;
-    float4 world;
+    float4x4 world;
 };
 
 
