@@ -120,6 +120,21 @@ DirectX::XMFLOAT3 Transform::GetScale()
 	return scale;
 }
 
+DirectX::XMFLOAT3 Transform::GetRight()
+{
+	return DirectX::XMFLOAT3();
+}
+
+DirectX::XMFLOAT3 Transform::GetUp()
+{
+	return DirectX::XMFLOAT3();
+}
+
+DirectX::XMFLOAT3 Transform::GetForward()
+{
+	return DirectX::XMFLOAT3();
+}
+
 DirectX::XMFLOAT4X4 Transform::GetWorldMatrix()
 {
 	if (dirty) {
