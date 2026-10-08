@@ -1,5 +1,6 @@
 #pragma once
 #include "Transform.h"
+#include <DirectXMath.h>
 
 class Camera
 {
@@ -7,7 +8,7 @@ private:
 	Transform transform;
 	DirectX::XMFLOAT4X4 viewMatrix;
 	DirectX::XMFLOAT4X4 projectionMatrix;
-	float fov;
+	float fieldOfView;
 	float nearClip;
 	float farClip;
 	float moveSpeed;
@@ -15,16 +16,17 @@ private:
 
 public:
 	// Constructor + Destructor
-	Camera(float aspectRatio,DirectX::XMFLOAT3 position);
+	Camera(float aspectRatio,float x, float y, float z);
 	~Camera();
 
 	// Getters
 	DirectX::XMFLOAT4X4 GetViewMatrix();
 	DirectX::XMFLOAT4X4 GetProjectionMatrix();
+	Transform* GetTransform();
 
 	// Update functions
 	void UpdateProjectionMatrix(float aspectRatio);
-	void UpdateViewMatrix(DirectX::XMFLOAT3 position, DirectX::XMFLOAT3 direction, DirectX::XMFLOAT3 up);	
+	void UpdateViewMatrix();	
 	void Update(float dt);
 };
 

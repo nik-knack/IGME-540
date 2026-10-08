@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "BufferStructs.h"
 #include "GameEntity.h"
+#include "Camera.h"
 
 class Game
 {
@@ -44,6 +45,12 @@ private:
 
 	// The store those meshes in a vector of game entities
 	std::vector<std::shared_ptr<GameEntity>> entities;
+
+	// Store multiple camera
+	std::vector<std::shared_ptr<Camera>> cameras;
+
+	// Keep track of which camera is currently active
+	int activeCameraIndex = 0;
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the

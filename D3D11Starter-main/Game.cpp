@@ -44,6 +44,9 @@ Game::Game()
 	LoadShaders();				// May adjust as see fit in the future
 	CreateGeometry();
 
+	// Create the camera
+	camera = std::make_shared<Camera>(Window::AspectRatio(), 0.0f, 0.0f, -1.0f);
+
 	// Creating game entity
 	entities.push_back(std::make_shared<GameEntity>(meshes[0]));
 	entities.push_back(std::make_shared<GameEntity>(meshes[1]));
@@ -62,7 +65,6 @@ Game::Game()
 
 	// Vertex Shader Data
 	vertexShaderData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-
 
 	// Creating the constant buffer
 	D3D11_BUFFER_DESC constantBufferDesc = {};
@@ -292,7 +294,10 @@ void Game::CreateGeometry()
 // --------------------------------------------------------
 void Game::OnResize()
 {
-
+	if (camera)
+	{
+		camera->UpdateProjectionMatrix(Window::AspectRatio());
+	}
 }
 
 
@@ -301,6 +306,12 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	// Update the camera
+	if (camera)
+	{
+		camera->Update(deltaTime);
+	}
+
 	// Call helper method to update ImGui
 	Game::ImGuiUpdate(deltaTime);
 
@@ -378,6 +389,10 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	color);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
+		
+	// Get camera's view and projection matrices shared by all entities
+	vertexShaderData.view = camera->GetViewMatrix();
+	vertexShaderData.projection = camera->GetProjectionMatrix();
 
 	// Draw each game entity
 	for (const auto& entity : entities)
