@@ -3,12 +3,12 @@
 
 using namespace DirectX;
 
-Camera::Camera(float aspectRatio, float x, float y, float z) :
-    fieldOfView(XMConvertToRadians(60.0f)),
+Camera::Camera(float aspectRatio, float x, float y, float z, float fieldOfView) :
+    fieldOfView(fieldOfView),
     nearClip(0.1f),
     farClip(100.0f),
     moveSpeed(2.0f),
-    mouseLookSpeed(0.000001f)
+    mouseLookSpeed(0.001f)
 {
     // Set the initial camera position
     transform.SetPosition(x, y, z);
@@ -35,6 +35,11 @@ DirectX::XMFLOAT4X4 Camera::GetProjectionMatrix()
 Transform* Camera::GetTransform()
 {
     return &transform;
+}
+
+float Camera::GetFieldOfView()
+{
+    return fieldOfView;
 }
 
 void Camera::UpdateProjectionMatrix(float aspectRatio)
@@ -99,8 +104,8 @@ void Camera::Update(float dt)
     if (Input::MouseLeftDown())
     {
 		// Get the current mouse position
-        float mouseX = Input::GetMouseX();
-		float mouseY = Input::GetMouseY();
+        float mouseX = Input::GetMouseXDelta();
+		float mouseY = Input::GetMouseYDelta();
 
 
 		// Apply mouse movement to the camera's rotation, scaled by the mouse look speed

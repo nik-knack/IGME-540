@@ -16,13 +16,14 @@ private:
 
 public:
 	// Constructor + Destructor
-	Camera(float aspectRatio,float x, float y, float z);
+	Camera(float aspectRatio,float x, float y, float z, float fieldOfView);
 	~Camera();
 
 	// Getters
 	DirectX::XMFLOAT4X4 GetViewMatrix();
 	DirectX::XMFLOAT4X4 GetProjectionMatrix();
 	Transform* GetTransform();
+	float GetFieldOfView();
 
 	// Update functions
 	void UpdateProjectionMatrix(float aspectRatio);

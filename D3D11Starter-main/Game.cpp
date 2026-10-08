@@ -44,8 +44,15 @@ Game::Game()
 	LoadShaders();				// May adjust as see fit in the future
 	CreateGeometry();
 
-	// Create the camera
-	camera = std::make_shared<Camera>(Window::AspectRatio(), 0.0f, 0.0f, -1.0f);
+	// Create the cameras
+	cameras.push_back( std::make_shared<Camera>(
+		Window::AspectRatio(), 0.0f, 0.0f, -3.0f, DirectX::XMConvertToRadians(60.0f)));
+
+	cameras.push_back(std::make_shared<Camera>(
+		Window::AspectRatio(), 0.0f, 0.0f, -10.0f, DirectX::XMConvertToRadians(90.0f)));
+
+	// Camera 0 is the active camera 
+	activeCameraIndex = 0;
 
 	// Creating game entity
 	entities.push_back(std::make_shared<GameEntity>(meshes[0]));
@@ -294,10 +301,15 @@ void Game::CreateGeometry()
 // --------------------------------------------------------
 void Game::OnResize()
 {
-	if (camera)
+	// Update the projection matrix for every camera 
+	for (const auto& camera : cameras)
 	{
-		camera->UpdateProjectionMatrix(Window::AspectRatio());
+		if (camera)
+		{
+			camera->UpdateProjectionMatrix(Window::AspectRatio());
+		}
 	}
+	
 }
 
 
@@ -306,10 +318,10 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
-	// Update the camera
-	if (camera)
+	// Update the active camera
+	if (cameras.size() > 0)
 	{
-		camera->Update(deltaTime);
+		cameras[activeCameraIndex]->Update(deltaTime);
 	}
 
 	// Call helper method to update ImGui
@@ -367,6 +379,41 @@ void Game::Update(float deltaTime, float totalTime)
 		ImGui::PopID();
 	}
 
+	if (ImGui::TreeNode("Cameras")) {
+
+		for (int i = 0; i < cameras.size(); i++)
+		{
+			std::string cameraName = "Camera " + std::to_string(i + 1);
+
+			// Update camera based on user input
+			if (ImGui::RadioButton(cameraName.c_str(), activeCameraIndex == i))
+			{
+				activeCameraIndex = i;
+			}
+		}
+
+		if (!cameras.empty() && activeCameraIndex >= 0 && activeCameraIndex < cameras.size())
+		{
+			std::shared_ptr<Camera> activeCamera = cameras[activeCameraIndex];
+
+			ImGui::Separator();
+
+			ImGui::Text("Active Camera Details: %d", activeCameraIndex + 1);
+
+			// Display the active camera's position and rotation
+			DirectX::XMFLOAT3 position = activeCamera->GetTransform()->GetPosition();
+			
+			ImGui::Text("Position: (%.2f, %.2f, %.2f)", position.x, position.y, position.z);
+
+			// Display the field of view
+			ImGui::Text("Field of View: %.2f degrees", DirectX::XMConvertToDegrees(activeCamera->GetFieldOfView()));
+
+		}
+
+
+		ImGui::TreePop();
+	}
+
 	ImGui::End(); // Ends the current window
 
 	// Example input checking: Quit if the escape key is pressed
@@ -391,8 +438,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 		
 	// Get camera's view and projection matrices shared by all entities
-	vertexShaderData.view = camera->GetViewMatrix();
-	vertexShaderData.projection = camera->GetProjectionMatrix();
+	vertexShaderData.view = cameras[activeCameraIndex]->GetViewMatrix();
+	vertexShaderData.projection = cameras[activeCameraIndex]->GetProjectionMatrix();
 
 	// Draw each game entity
 	for (const auto& entity : entities)
