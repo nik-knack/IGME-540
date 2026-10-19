@@ -104,8 +104,8 @@ void Camera::Update(float dt)
     if (Input::MouseLeftDown())
     {
 		// Get the current mouse position
-        float mouseX = Input::GetMouseXDelta();
-		float mouseY = Input::GetMouseYDelta();
+        int mouseX = Input::GetMouseXDelta();
+		int mouseY = Input::GetMouseYDelta();
 
 
 		// Apply mouse movement to the camera's rotation, scaled by the mouse look speed
