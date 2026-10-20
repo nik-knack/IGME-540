@@ -5,6 +5,7 @@
 #include "PathHelpers.h"
 #include "Window.h"
 
+
 #include <DirectXMath.h>
 
 // Needed for a helper function to load pre-compiled shader files
