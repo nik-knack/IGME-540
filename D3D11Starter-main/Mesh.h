@@ -3,11 +3,16 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include "Vertex.h"
+#include <fstream>
+#include <vector>
+#include <stdexcept>
+#include <unordered_map>
 
 class Mesh
 {
 public:
 	Mesh(const Vertex* vertices, unsigned int vertexCount, const unsigned int* indices, unsigned int indexCount);
+	Mesh(const char* objFile);
 	~Mesh();
 
 	// Primary functions
