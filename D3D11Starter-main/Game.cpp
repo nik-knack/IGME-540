@@ -5,7 +5,6 @@
 #include "PathHelpers.h"
 #include "Window.h"
 
-
 #include <DirectXMath.h>
 
 // Needed for a helper function to load pre-compiled shader files
@@ -450,6 +449,13 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Draw each game entity
 	for (const auto& entity : entities)
 	{
+		// Get the entity's material
+		std::shared_ptr<Material> material = entity->GetMaterial();
+
+		// Bind the entity's material
+		Graphics::Context->VSSetShader(material->GetVertexShader().Get(), 0, 0);
+		Graphics::Context->PSSetShader(material->GetPixelShader().Get(), 0, 0);
+
 		// Get the entity's mesh and transform
 		vertexShaderData.world = entity->GetTransform()->GetWorldMatrix();
 
