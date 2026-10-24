@@ -8,7 +8,7 @@ Material::Material(
 {
 }
 
-DirectX::XMFLOAT4 Material::GetColorTint()
+DirectX::XMFLOAT4 Material::GetColorTint() const
 {
     return colorTint;
 }

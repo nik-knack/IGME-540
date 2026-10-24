@@ -300,9 +300,39 @@ Mesh::Mesh(const char* objFile)
 	obj.close();
 
 	// Create the vertex buffer
+	{
+		D3D11_BUFFER_DESC vbd = {};
+		vbd.Usage = D3D11_USAGE_IMMUTABLE;
+		vbd.ByteWidth = sizeof(Vertex) * (UINT)finalVertices.size();
+		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+		D3D11_SUBRESOURCE_DATA initialVertexData = {};
+		initialVertexData.pSysMem = finalVertices.data();
+
+		Graphics::Device->CreateBuffer(
+			&vbd, 
+			&initialVertexData, 
+			vertexBuffer.GetAddressOf());
+	}
+
 	// Create the index buffer
+	{
+		D3D11_BUFFER_DESC ibd = {};
+		ibd.Usage = D3D11_USAGE_IMMUTABLE;
+		ibd.ByteWidth = sizeof(unsigned int) * (UINT)finalIndices.size();
+		ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 
+		D3D11_SUBRESOURCE_DATA initialIndexData = {};
+		initialIndexData.pSysMem = finalIndices.data();
 
+		Graphics::Device->CreateBuffer(
+			&ibd,
+			&initialIndexData,
+			indexBuffer.GetAddressOf());
+	}
+
+	vertexCount = static_cast<unsigned int>(finalVertices.size());
+	indexCount = static_cast<unsigned int>(finalIndices.size());
 
 	// *************************************
 	//      IMPLEMENTATION NOTES (2/2)
@@ -356,7 +386,7 @@ Microsoft::WRL::ComPtr<ID3D11Buffer> Mesh::GetIndexBuffer()
 // --------------------------------------------------------
 // Helper function to get the number of verticces
 // --------------------------------------------------------
-unsigned int Mesh::GetVertexCount()
+unsigned int Mesh::GetVertexCount() const
 {
 	return vertexCount;
 }
@@ -364,7 +394,7 @@ unsigned int Mesh::GetVertexCount()
 // --------------------------------------------------------
 // Helper function to get number of indices
 // --------------------------------------------------------
-unsigned int Mesh::GetIndexCount()
+unsigned int Mesh::GetIndexCount() const
 {
 	return indexCount;
 }
@@ -374,19 +404,20 @@ unsigned int Mesh::GetIndexCount()
 // --------------------------------------------------------
 void Mesh::Draw()
 {
-	// DRAW geometry
-	{
-		// Set buffers in the input assembler (IA) stage
-		UINT stride = sizeof(Vertex);
-		UINT offset = 0;
+	if (!vertexBuffer || !indexBuffer || indexCount == 0)
+		return;
+	
+	// Set buffers in the input assembler (IA) stage
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
 
-		Graphics::Context->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
-		Graphics::Context->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	Graphics::Context->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
+	Graphics::Context->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-		// Tell Direct3D to draw
-		Graphics::Context->DrawIndexed(
-			indexCount,     // The number of indices to use (we could draw a subset if we wanted)
-			0,     
-			0);    
-	}
+	// Tell Direct3D to draw
+	Graphics::Context->DrawIndexed(
+		(UINT)indexCount,     // The number of indices to use (we could draw a subset if we wanted)
+		0,     
+		0);    
+	
 }

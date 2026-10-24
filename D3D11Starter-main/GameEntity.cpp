@@ -1,9 +1,8 @@
 #include "GameEntity.h"
 
 GameEntity::GameEntity(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material)
+	: mesh(mesh), material(material)
 {
-	this->mesh = mesh;
-	this->material = material;
 }
 
 std::shared_ptr<Mesh> GameEntity::GetMesh()

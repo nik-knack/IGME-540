@@ -1,7 +1,6 @@
 // Define cbuffer
 cbuffer VertexShaderData : register(b0)
 {
-    float4 colorTint;
     float4x4 world;
     float4x4 view;
     float4x4 projection;
@@ -22,8 +21,8 @@ struct VertexShaderInput
 	//  |    |                |
 	//  v    v                v
 	float3 localPosition	: POSITION;     // XYZ position
-    float2 uv : TEXCOORD0; // UV coordinates
-    float3 normal : NORMAL; // Normal vector
+    float2 uv				: TEXCOORD; // UV coordinates
+    float3 normal			: NORMAL; // Normal vector
 };
 
 // Struct representing the data we're sending down the pipeline
@@ -39,8 +38,8 @@ struct VertexToPixel
 	//  |    |                |
 	//  v    v                v
 	float4 screenPosition	: SV_POSITION;	// XYZW position (System Value Position)
-    float2 uv : TEXCOORD0;
-    float3 normal : NORMAL;
+    float2 uv				: TEXCOORD0;
+    float3 normal			: NORMAL0;
 };
 
 // --------------------------------------------------------
@@ -57,8 +56,8 @@ VertexToPixel main( VertexShaderInput input )
 
     float4 worldPosition = mul(world, float4(input.localPosition, 1.0f));
     float4 viewPosition = mul(view, worldPosition);
-    output.screenPosition = mul(projection, viewPosition);
 	
+    output.screenPosition = mul(projection, viewPosition);
     output.uv = input.uv;
     output.normal = input.normal;
 

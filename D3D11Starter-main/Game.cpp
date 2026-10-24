@@ -54,26 +54,31 @@ Game::Game()
 	// Camera 0 is the active camera 
 	activeCameraIndex = 0;
 
+	// Create a vector of materials for the meshes
+	std::vector<std::shared_ptr<Material>> materials;
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 0, 0, 1), vertexShader, pixelShader));	// Red
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 1, 0, 1), vertexShader, pixelShader));	// Green
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 1, 1), vertexShader, pixelShader));	// Blue
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 0, 1, 1), vertexShader, pixelShader));	// Magenta
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 0, 1), vertexShader, pixelShader));	// Yellow
+
 	// Creating game entity
-	entities.push_back(std::make_shared<GameEntity>(meshes[0]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[1]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[1]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[2]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[2]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[0], materials[0]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[1], materials[1]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[1], materials[2]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[2], materials[3]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[2], materials[4]));
 
 	assert(entities.size() == 5);
 
 	// Give each entity a different position
 	entities[0]->GetTransform()->SetPosition(0.0f, 0.0f, 0.0f);
-	entities[1]->GetTransform()->SetPosition(0.2f, 0.2f, 0.0f);
-	entities[2]->GetTransform()->SetPosition(-0.5f, -0.3f, 0.0f);
+	entities[1]->GetTransform()->SetPosition(1.0f, 1.0f, 0.0f);
+	entities[2]->GetTransform()->SetPosition(3.0f, 3.0f, 10.0f);
 	entities[3]->GetTransform()->SetPosition(0.5f, -0.5f, 0.0f);
 	entities[4]->GetTransform()->SetPosition(0.3f, 0.4f, 0.0f);
 
-	// Vertex Shader Data
-	vertexShaderData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-
-	// Creating the constant buffer
+	// Creating constant buffers
 	D3D11_BUFFER_DESC constantBufferDesc = {};
 	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	constantBufferDesc.ByteWidth = sizeof(VertexShaderData);
@@ -91,6 +96,25 @@ Game::Game()
 		0,										
 		1,										
 		vertexShaderConstantBuffer.GetAddressOf() 
+	);
+
+	// Create the pixel shader buffer
+	D3D11_BUFFER_DESC pixelShaderBufferDesc = {};
+	pixelShaderBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	pixelShaderBufferDesc.ByteWidth = sizeof(pixelShaderData);
+	pixelShaderBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	pixelShaderBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	Graphics::Device->CreateBuffer(
+		&pixelShaderBufferDesc,
+		nullptr,
+		pixelShaderConstantBuffer.GetAddressOf()
+	);
+
+	Graphics::Context->PSSetConstantBuffers(
+		0, 
+		1, 
+		pixelShaderConstantBuffer.GetAddressOf()
 	);
 
 	// Set initial graphics API state
@@ -189,7 +213,7 @@ void Game::LoadShaders()
 
 		// Set up the second element - a color, which is 4 more float values
 		inputElements[1].Format = DXGI_FORMAT_R32G32_FLOAT;			// 4x 32-bit floats
-		inputElements[1].SemanticName = "TEXCOORD0";							// Match our vertex shader input
+		inputElements[1].SemanticName = "TEXCOORD";							// Match our vertex shader input
 		inputElements[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
 		
 		// Set up the third element - a normal, which is 3 more float values
@@ -200,7 +224,7 @@ void Game::LoadShaders()
 		// Create the input layout, verifying our description against actual shader code
 		Graphics::Device->CreateInputLayout(
 			inputElements,							// An array of descriptions
-			3,										// How many elements in that array?
+			ARRAYSIZE(inputElements),				// How many elements in that array?
 			vertexShaderBlob->GetBufferPointer(),	// Pointer to the code of a shader that uses this layout
 			vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
 			inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
@@ -220,83 +244,9 @@ void Game::CreateGeometry()
 	XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 	XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
 
-	//// Create triangle vertices
-	//Vertex triangleVertices[] = 
-	//{
-	//	{ XMFLOAT3(0.0f, 0.5f, 0.0f), red },
-	//	{ XMFLOAT3(0.5f, -0.5f, 0.0f), green },
-	//	{ XMFLOAT3(-0.5f, -0.5f, 0.0f), blue }
-	//};
-	//
-	//// Create triangle indices
-	//unsigned int triangleIndices[] = { 0, 1, 2 };
-
-
-	//// Add to mesh vertex
-	//meshes.push_back(
-	//	std::make_shared<Mesh>(
-	//		triangleVertices,
-	//		3,
-	//		triangleIndices,
-	//		3
-	//	)
-	//);
-
-	//// Create square vertices
-	//Vertex squareVertices[] =
-	//{
-	//	{ XMFLOAT3(0.5f, 0.5f, 0.0f), red },
-	//	{ XMFLOAT3(0.9f, 0.5f, 0.0f), red },
-	//	{ XMFLOAT3(0.9f, 0.3f, 0.0f), blue },
-	//	{ XMFLOAT3(0.5f, 0.3f, 0.0f), blue }
-	//};
-
-	//// Create square indices
-	//unsigned int squareIndices[] =
-	//{
-	//	0, 1, 2,
-	//	0, 2, 3
-	//};
-
-	//// Add to mesh vertex
-	//meshes.push_back(
-	//	std::make_shared<Mesh>(
-	//		squareVertices,
-	//		4,
-	//		squareIndices,
-	//		6
-	//	)
-	//);
-
-	//// Create a pentagon vertices
-	//Vertex pentagonVertices[] =
-	//{
-
-	//	
-	//	{ XMFLOAT3(-0.500f, 1.000f, 0.0f), blue },
-	//	{ XMFLOAT3(-0.024f, 0.655f, 0.0f), blue },
-	//	{ XMFLOAT3(-0.206f, 0.105f, 0.0f), blue },
-	//	{ XMFLOAT3(-0.794f, 0.105f, 0.0f), blue },
-	//	{ XMFLOAT3(- 0.976f, 0.655f, 0.0f), blue}
-
-	//};
-
-	//// Create pentagon indices
-	//unsigned int pentagonIndices[] =
-	//{
-	//	0, 1, 2,
-	//	0, 2, 3,
-	//	0, 3, 4
-	//};
-
-	//meshes.push_back(
-	//	std::make_shared<Mesh>(
-	//		pentagonVertices,
-	//		5,
-	//		pentagonIndices,
-	//		9
-	//	)
-	//);
+	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cube.obj").c_str()));
+	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/sphere.obj").c_str()));
+	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/helix.obj").c_str()));
 }
 
 
@@ -446,11 +396,15 @@ void Game::Draw(float deltaTime, float totalTime)
 	vertexShaderData.view = cameras[activeCameraIndex]->GetViewMatrix();
 	vertexShaderData.projection = cameras[activeCameraIndex]->GetProjectionMatrix();
 
+	// Bind the drawing input layout and primitive topology
+	Graphics::Context->IASetInputLayout(inputLayout.Get());	
+	Graphics::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	// Draw each game entity
 	for (const auto& entity : entities)
 	{
 		// Get the entity's material
-		std::shared_ptr<Material> material = entity->GetMaterial();
+		auto material = entity->GetMaterial();
 
 		// Bind the entity's material
 		Graphics::Context->VSSetShader(material->GetVertexShader().Get(), 0, 0);
@@ -480,6 +434,32 @@ void Game::Draw(float deltaTime, float totalTime)
 			vertexShaderConstantBuffer.Get(),
 			0
 		);
+
+		// Send the entity's material to the pixel shader
+		pixelShaderData.colorTint = material->GetColorTint();
+
+		// Map -> memcpy -> Unmap sequence for pixel shader
+		D3D11_MAPPED_SUBRESOURCE mappedPSBuffer = {};
+
+		Graphics::Context->Map(
+			pixelShaderConstantBuffer.Get(),
+			0,
+			D3D11_MAP_WRITE_DISCARD,
+			0,
+			&mappedPSBuffer
+		);
+
+		memcpy(
+			mappedPSBuffer.pData,
+			&pixelShaderData,
+			sizeof(PixelShaderData)
+		);
+
+		Graphics::Context->Unmap(
+			pixelShaderConstantBuffer.Get(),
+			0
+		);
+
 
 		entity->Draw();
 	}	

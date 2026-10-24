@@ -15,7 +15,7 @@ public:
         Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader, 
         Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader);
 
-	DirectX::XMFLOAT4 GetColorTint();
+	DirectX::XMFLOAT4 GetColorTint() const;
 	void SetColorTint(DirectX::XMFLOAT4 colorTint);
 
     Microsoft::WRL::ComPtr<ID3D11VertexShader> GetVertexShader();
