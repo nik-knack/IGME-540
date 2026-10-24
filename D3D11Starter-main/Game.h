@@ -26,6 +26,9 @@ public:
 	// Initialization of UI helper functions
 	void ImGuiUpdate(float deltaTime);
 
+	// Load Shader helper
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(const std::wstring& file);
+
 	bool showDemoWindow = false;
 	bool isChecked = false;
 	int number = 0;

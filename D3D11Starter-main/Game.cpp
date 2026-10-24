@@ -46,37 +46,76 @@ Game::Game()
 
 	// Create the cameras
 	cameras.push_back( std::make_shared<Camera>(
-		Window::AspectRatio(), 0.0f, 0.0f, -3.0f, DirectX::XMConvertToRadians(60.0f)));
+		Window::AspectRatio(), 0.0f, 0.0f, -12.0f, DirectX::XMConvertToRadians(60.0f)));
 
 	cameras.push_back(std::make_shared<Camera>(
-		Window::AspectRatio(), 0.0f, 0.0f, -10.0f, DirectX::XMConvertToRadians(90.0f)));
+		Window::AspectRatio(), 0.0f, 0.0f, -24.0f, DirectX::XMConvertToRadians(90.0f)));
 
 	// Camera 0 is the active camera 
 	activeCameraIndex = 0;
 
+	// Load shaders
+	auto uvPS = LoadPixelShader(L"DebugUVsPS.cso");
+	auto normalPS = LoadPixelShader(L"DebugNormalsPS.cso");
+	auto customPS = LoadPixelShader(L"CustomPS.cso");
+
 	// Create a vector of materials for the meshes
 	std::vector<std::shared_ptr<Material>> materials;
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 0, 0, 1), vertexShader, pixelShader));	// Red
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 1, 0, 1), vertexShader, pixelShader));	// Green
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 1, 1), vertexShader, pixelShader));	// Blue
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 0, 1, 1), vertexShader, pixelShader));	// Magenta
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 0, 1), vertexShader, pixelShader));	// Yellow
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, uvPS));			
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, normalPS));	
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, customPS));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 1, 0, 1), vertexShader, pixelShader));	
 
-	// Creating game entity
+	// Creating game entities
 	entities.push_back(std::make_shared<GameEntity>(meshes[0], materials[0]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[1], materials[1]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[1], materials[2]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[2], materials[3]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[2], materials[4]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[1], materials[0]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[2], materials[0]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[3], materials[0]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[4], materials[0]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[5], materials[0]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[6], materials[0]));
 
-	assert(entities.size() == 5);
+	entities.push_back(std::make_shared<GameEntity>(meshes[0], materials[1]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[1], materials[1]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[2], materials[1]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[3], materials[1]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[4], materials[1]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[5], materials[1]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[6], materials[1]));
+
+	entities.push_back(std::make_shared<GameEntity>(meshes[0], materials[2]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[1], materials[2]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[2], materials[2]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[3], materials[2]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[4], materials[3]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[5], materials[3]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[6], materials[3]));
 
 	// Give each entity a different position
-	entities[0]->GetTransform()->SetPosition(0.0f, 0.0f, 0.0f);
-	entities[1]->GetTransform()->SetPosition(1.0f, 1.0f, 0.0f);
-	entities[2]->GetTransform()->SetPosition(3.0f, 3.0f, 10.0f);
-	entities[3]->GetTransform()->SetPosition(0.5f, -0.5f, 0.0f);
-	entities[4]->GetTransform()->SetPosition(0.3f, 0.4f, 0.0f);
+	entities[0]->GetTransform()->SetPosition(-9.0f, 0.0f, 0.0f);
+	entities[1]->GetTransform()->SetPosition(-6.0f, 0.0f, 0.0f);
+	entities[2]->GetTransform()->SetPosition(-3.0f, 0.0f, 0.0f);
+	entities[3]->GetTransform()->SetPosition(0.0f, 0.0f, 0.0f);
+	entities[4]->GetTransform()->SetPosition(3.0f, 0.0f, 0.0f);
+	entities[5]->GetTransform()->SetPosition(6.0f, 0.0f, 0.0f);
+	entities[6]->GetTransform()->SetPosition(9.0f, 0.0f, 0.0f);
+
+	entities[7]->GetTransform()->SetPosition(-9.0f, 3.0f, 0.0f);
+	entities[8]->GetTransform()->SetPosition(-6.0f, 3.0f, 0.0f);
+	entities[9]->GetTransform()->SetPosition(-3.0f, 3.0f, 0.0f);
+	entities[10]->GetTransform()->SetPosition(0.0f, 3.0f, 0.0f);
+	entities[11]->GetTransform()->SetPosition(3.0f, 3.0f, 0.0f);
+	entities[12]->GetTransform()->SetPosition(6.0f, 3.0f, 0.0f);
+	entities[13]->GetTransform()->SetPosition(9.0f, 3.0f, 0.0f);
+
+	entities[14]->GetTransform()->SetPosition(-9.0f, -3.0f, 0.0f);
+	entities[15]->GetTransform()->SetPosition(-6.0f, -3.0f, 0.0f);
+	entities[16]->GetTransform()->SetPosition(-3.0f, -3.0f, 0.0f);
+	entities[17]->GetTransform()->SetPosition(0.0f, -3.0f, 0.0f);
+	entities[18]->GetTransform()->SetPosition(3.0f, -3.0f, 0.0f);
+	entities[19]->GetTransform()->SetPosition(6.0f, -3.0f, 0.0f);
+	entities[20]->GetTransform()->SetPosition(9.0f, -3.0f, 0.0f);
+
 
 	// Creating constant buffers
 	D3D11_BUFFER_DESC constantBufferDesc = {};
@@ -245,8 +284,12 @@ void Game::CreateGeometry()
 	XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
 
 	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cube.obj").c_str()));
-	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/sphere.obj").c_str()));
+	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/cylinder.obj").c_str()));
 	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/helix.obj").c_str()));
+	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/sphere.obj").c_str()));	
+	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/torus.obj").c_str()));
+	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/quad.obj").c_str()));
+	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/quad_double_sided.obj").c_str()));
 }
 
 
@@ -502,6 +545,17 @@ void Game::ImGuiUpdate(float deltaTime) {
 	// Determine new input capture
 	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
 	Input::SetMouseCapture(io.WantCaptureMouse);
+}
+
+// Helper method to load shaders
+Microsoft::WRL::ComPtr<ID3D11PixelShader> Game::LoadPixelShader(const std::wstring& file)
+{
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> ps;
+	Microsoft::WRL::ComPtr<ID3DBlob> blob;
+	D3DReadFileToBlob(FixPath(file).c_str(), blob.GetAddressOf());
+	Graphics::Device->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), 0, ps.GetAddressOf());
+	
+	return ps;
 }
 
 
