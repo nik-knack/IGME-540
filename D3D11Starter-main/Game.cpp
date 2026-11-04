@@ -1,4 +1,4 @@
-#include "Game.h"
+	#include "Game.h"
 #include "Graphics.h"
 #include "Vertex.h"
 #include "Input.h"
@@ -625,7 +625,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	for (const auto& entity : entities)
 	{
 		// Get the entity's material
-		auto material = entity->GetMaterial();
+		auto material = entity->GetMaterial();	
 
 		// Bind the entity's material
 		Graphics::Context->VSSetShader(material->GetVertexShader().Get(), 0, 0);
@@ -635,6 +635,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		vertexShaderData.world = entity->GetTransform()->GetWorldMatrix();
 		vertexShaderData.view = cameras[activeCameraIndex]->GetViewMatrix();
 		vertexShaderData.projection = cameras[activeCameraIndex]->GetProjectionMatrix();
+		vertexShaderData.worldInvTranspose = entity->GetTransform()->GetWorldInverseTransposeMatrix();
 
 		// Upload and bind vertex shader with the constant buffer
 		FillAndBindNextConstantBuffer(
@@ -648,6 +649,8 @@ void Game::Draw(float deltaTime, float totalTime)
 		pixelShaderData.colorTint = material->GetColorTint();
 		pixelShaderData.uvScale = material->GetUVSccale();
 		pixelShaderData.uvOffset = material->GetUVOffset();
+		pixelShaderData.cameraPosition = cameras[activeCameraIndex]->GetTransform()->GetPosition();
+		pixelShaderData.ambientColor = DirectX::XMFLOAT3(0.0f, 0.8f, 0.5f);
 
 		// Upload and bind pixel shader with the constant buffer
 		FillAndBindNextConstantBuffer(

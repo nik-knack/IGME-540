@@ -4,16 +4,17 @@
 
 struct VertexShaderInput
 {
-    float3 localPosition : POSITION; // XYZ position
-    float2 uv : TEXCOORD; // UV coordinates
-    float3 normal : NORMAL; // Normal vector
+    float3 localPosition    : POSITION; 
+    float2 uv               : TEXCOORD0; 
+    float3 normal           : NORMAL0; 
 };
 
 struct VertexToPixel
 {
-    float4 screenPosition : SV_POSITION;
-    float2 uv : TEXCOORD0;
-    float3 normal : NORMAL0;
+    float4 screenPosition   : SV_POSITION;
+    float2 uv               : TEXCOORD0;
+    float3 normal           : NORMAL0;
+    float3 worldPosition    : TEXCOORD1;
 };
 
 #endif
