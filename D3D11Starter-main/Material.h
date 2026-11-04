@@ -36,23 +36,23 @@ public:
 	void SetColorTint(DirectX::XMFLOAT4 colorTint);
 
     // UV Scale
-    DirectX::XMFLOAT4 GetUVSccale() const;
+    DirectX::XMFLOAT2 GetUVSccale() const;
     void SetUVScale(DirectX::XMFLOAT2 scale);
     
     // UV Offset
-    DirectX::XMFLOAT4 GetUVOffset() const;
-    void SetUVOffset(DirectX::XMFLOAT4 offset);
+    DirectX::XMFLOAT2 GetUVOffset() const;
+    void SetUVOffset(DirectX::XMFLOAT2 offset);
 
     //Shaders
     Microsoft::WRL::ComPtr<ID3D11VertexShader> GetVertexShader();
     Microsoft::WRL::ComPtr<ID3D11PixelShader> GetPixelShader();
 
     // Texture and sampler management
-    void AddTextureSRV();
-    void AddSampler();
-    void BindTexturesAndSameplers();
+    void AddTextureSRV(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv);
+    void AddSampler(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler);
+    void BindTexturesAndSamplers();
 
     // Access texture resources for ImGui
-    //const GetTextures() const; something like this
+    const auto& GetTextures() const;
 };
 

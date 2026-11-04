@@ -1,6 +1,9 @@
 #pragma once
 
 #include <d3d11.h>
+#include <d3d11_1.h>
+#include <d3d11shader.h>
+#include <cstdint>
 #include <wrl/client.h>
 #include <vector>
 #include <memory>
@@ -72,10 +75,27 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> pixelShaderConstantBuffer;
+	//Microsoft::WRL::ComPtr<ID3D11Buffer> pixelShaderConstantBuffer;
 	PixelShaderData pixelShaderData;
 
 	// Constant buffer to hold data for the vertex shader
-	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexShaderConstantBuffer;
+	//Microsoft::WRL::ComPtr<ID3D11Buffer> vertexShaderConstantBuffer;
+
+	// Context for constant buffer binding
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext1> context1;
+
+	// Shared constant buffer heap
+	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBufferHeap;
+
+	// Tracking for ring-buffer
+	unsigned int cbHeapSizeInBytes = 256000;
+	unsigned int cbHeapOffsetInBytes = 0;
+
+	// Upload data and bind the corresponding buffer region
+	void FillAndBindNextConstantBuffer(
+		const void* data,
+		unsigned int dataSizeInBytes,
+		D3D11_SHADER_VERSION_TYPE shaderType,
+		unsigned int registerSlot);
 };
 

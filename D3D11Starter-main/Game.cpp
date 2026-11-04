@@ -4,6 +4,9 @@
 #include "Input.h"
 #include "PathHelpers.h"
 #include "Window.h"
+#include <stdexcept>
+#include <cstring>
+#include <WICTextureLoader.h>
 
 #include <DirectXMath.h>
 
@@ -44,6 +47,40 @@ Game::Game()
 	LoadShaders();				// May adjust as see fit in the future
 	CreateGeometry();
 
+	// Obtain the D3D11 context
+	HRESULT hr = Graphics::Context.As(&context1);
+
+	if (FAILED(hr))
+	{
+		throw std::runtime_error("Direct3D context is unavailable");
+	}
+
+	// Reset ring buffer position
+	cbHeapOffsetInBytes = 0;
+
+	// Ensure the heap size is a multiple of 256
+	cbHeapSizeInBytes = ((cbHeapSizeInBytes + 255) / 256) * 256;
+
+	// Create the large constant buffer
+	D3D11_BUFFER_DESC desc = {};
+
+	desc.ByteWidth = cbHeapSizeInBytes;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = 0;
+
+	hr = Graphics::Device->CreateBuffer(
+		&desc,
+		nullptr,
+		constantBufferHeap.GetAddressOf());
+
+	if (FAILED(hr))
+	{
+		throw std::runtime_error("Failed to create constant buffer heap");
+	}
+
 	// Create the cameras
 	cameras.push_back( std::make_shared<Camera>(
 		Window::AspectRatio(), 0.0f, 0.0f, -12.0f, DirectX::XMConvertToRadians(60.0f)));
@@ -54,17 +91,78 @@ Game::Game()
 	// Camera 0 is the active camera 
 	activeCameraIndex = 0;
 
+	// Load textures
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fabricTexture;
+	DirectX::CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/fabric_pattern.png").c_str(),
+		0,
+		fabricTexture.GetAddressOf()
+	);
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cuddlyTexture;
+	DirectX::CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures/cuddly_teddy.jpg").c_str(),
+		0,
+		cuddlyTexture.GetAddressOf()
+	);
+
+	// Create the sampler state
+	D3D11_SAMPLER_DESC samplerDesc = {};
+
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.MinLOD = 0.0f;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler;
+
+	hr = Graphics::Device->CreateSamplerState(
+		&samplerDesc,
+		sampler.GetAddressOf());
+
+	if (FAILED(hr))
+	{
+		throw std::runtime_error("Failed to create texture sampler");
+	}
+
 	// Load shaders
 	auto uvPS = LoadPixelShader(L"DebugUVsPS.cso");
 	auto normalPS = LoadPixelShader(L"DebugNormalsPS.cso");
 	auto customPS = LoadPixelShader(L"CustomPS.cso");
+	auto combinedPS = LoadPixelShader(L"CombinedTexturePS.cso");
 
 	// Create a vector of materials for the meshes
-	std::vector<std::shared_ptr<Material>> materials;
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, uvPS));			
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, normalPS));	
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, customPS));
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 1, 0, 1), vertexShader, pixelShader));	
+	//materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, uvPS));			
+	//materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, normalPS));	
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, pixelShader));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, pixelShader));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, combinedPS));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 1, 0, 1), vertexShader, customPS));
+
+	// Fabric Material
+	materials[0]->AddTextureSRV(0, fabricTexture);
+	materials[0]->AddSampler(0, sampler);
+
+	// Cuddly Material
+	materials[1]->AddTextureSRV(0, cuddlyTexture);
+	materials[1]->AddSampler(0, sampler);
+
+	// Combined Texture
+	materials[2]->AddTextureSRV(0, fabricTexture);
+	materials[2]->AddTextureSRV(1, cuddlyTexture);
+	materials[2]->AddSampler(0, sampler);
+
+	// Keep plain color material
+	materials[3]->SetColorTint(XMFLOAT4(0, 1, 0, 1));
+
 
 	// Creating game entities
 	entities.push_back(std::make_shared<GameEntity>(meshes[0], materials[0]));
@@ -115,46 +213,6 @@ Game::Game()
 	entities[18]->GetTransform()->SetPosition(3.0f, -3.0f, 0.0f);
 	entities[19]->GetTransform()->SetPosition(6.0f, -3.0f, 0.0f);
 	entities[20]->GetTransform()->SetPosition(9.0f, -3.0f, 0.0f);
-
-
-	// Creating constant buffers
-	D3D11_BUFFER_DESC constantBufferDesc = {};
-	constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	constantBufferDesc.ByteWidth = sizeof(VertexShaderData);
-	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;			
-
-	Graphics::Device->CreateBuffer(
-		&constantBufferDesc,
-		nullptr,
-		vertexShaderConstantBuffer.GetAddressOf()
-	);
-
-	// Bind the constant buffer to the vertex shader
-	Graphics::Context->VSSetConstantBuffers(
-		0,										
-		1,										
-		vertexShaderConstantBuffer.GetAddressOf() 
-	);
-
-	// Create the pixel shader buffer
-	D3D11_BUFFER_DESC pixelShaderBufferDesc = {};
-	pixelShaderBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	pixelShaderBufferDesc.ByteWidth = sizeof(pixelShaderData);
-	pixelShaderBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	pixelShaderBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	Graphics::Device->CreateBuffer(
-		&pixelShaderBufferDesc,
-		nullptr,
-		pixelShaderConstantBuffer.GetAddressOf()
-	);
-
-	Graphics::Context->PSSetConstantBuffers(
-		0, 
-		1, 
-		pixelShaderConstantBuffer.GetAddressOf()
-	);
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -292,6 +350,83 @@ void Game::CreateGeometry()
 	meshes.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Meshes/quad_double_sided.obj").c_str()));
 }
 
+void Game::FillAndBindNextConstantBuffer(const void* data, unsigned int dataSizeInBytes, D3D11_SHADER_VERSION_TYPE shaderType, unsigned int registerSlot)
+{
+	if (!data || dataSizeInBytes == 0)
+		return;
+
+	// Reserve space in multiples of 256
+	const  unsigned int reservationSize = ((dataSizeInBytes + 255) / 256) * 256;
+
+	if (reservationSize > cbHeapSizeInBytes)
+	{
+		throw std::runtime_error("Constant buffer allocation excees heap size");
+	}
+
+	// Wrap around when the next allocation does not fit
+	if (cbHeapOffsetInBytes + reservationSize > cbHeapSizeInBytes)
+	{
+		cbHeapOffsetInBytes = 0;
+	}
+
+	// Map the head without overweriting existing GPU data
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+
+	HRESULT hr = context1->Map(
+		constantBufferHeap.Get(),
+		0,
+		D3D11_MAP_WRITE_NO_OVERWRITE,
+		0,
+		&mapped);
+
+	if (FAILED(hr))
+	{
+		throw std::runtime_error("Failed to map constant buffer heap");
+	}
+
+	// Copy data into this allocation
+	void* destination = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(mapped.pData) + cbHeapOffsetInBytes);
+
+	std::memcpy(
+		destination,
+		data,
+		dataSizeInBytes);
+
+	context1->Unmap(constantBufferHeap.Get(), 0);
+
+	// Buffer bindings in 16 bytes
+	const unsigned int firstConstant = cbHeapOffsetInBytes / 16;
+	const unsigned int numConstants = reservationSize / 16;
+
+	// Bind the appropriate region to the requested shader
+	switch (shaderType)
+	{
+	case D3D11_SHVER_VERTEX_SHADER:
+		context1->VSSetConstantBuffers1(
+			registerSlot,
+			1,
+			constantBufferHeap.GetAddressOf(),
+			&firstConstant,
+			&numConstants);
+		break;
+
+	case D3D11_SHVER_PIXEL_SHADER:
+		context1->PSSetConstantBuffers1(
+			registerSlot,
+			1,
+			constantBufferHeap.GetAddressOf(),
+			&firstConstant,
+			&numConstants);
+		break;
+
+	default:
+		throw std::invalid_argument("Unsupported shader");
+	}
+
+	// Advance to the next allocation
+	cbHeapOffsetInBytes += reservationSize;
+}
+
 
 // --------------------------------------------------------
 // Handle resizing to match the new window size
@@ -342,6 +477,49 @@ void Game::Update(float deltaTime, float totalTime)
 		{
 			showDemoWindow = !showDemoWindow;
 		}
+	}
+
+	if (ImGui::TreeNode("Materials"))
+	{	
+		for (int i = 0; i < static_cast<int>(materials.size()); i++)
+		{
+			ImGui::PushID(i);
+
+			std::string materialName = "Material" + std::to_string(i + 1);
+
+			auto material = materials[i];
+
+			if (ImGui::TreeNode(materialName.c_str()))
+			{
+				// Color tint
+				DirectX::XMFLOAT4 tint = material->GetColorTint();
+
+				if (ImGui::ColorEdit4("Color Tint", &tint.x))
+				{
+					material->SetColorTint(tint);
+				}
+
+				// UV Scale
+				DirectX::XMFLOAT2 scale = material->GetUVSccale();
+
+				if (ImGui::DragFloat2("UV Scale", &scale.x, 0.05f))
+				{
+					material->SetUVScale(scale);
+				}
+
+				// UV Offset
+				DirectX::XMFLOAT2 offset = material->GetUVOffset();
+
+				if (ImGui::DragFloat2("UV Offset", &offset.x, 0.01f))
+				{
+					material->SetUVOffset(offset);
+				}
+
+				ImGui::TreePop();
+			}
+			ImGui::PopID();
+		}
+		ImGui::TreePop();
 	}
 
 	for (int i = 0; i < entities.size(); i++) 
@@ -436,8 +614,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 		
 	// Get camera's view and projection matrices shared by all entities
-	vertexShaderData.view = cameras[activeCameraIndex]->GetViewMatrix();
-	vertexShaderData.projection = cameras[activeCameraIndex]->GetProjectionMatrix();
+	//vertexShaderData.view = cameras[activeCameraIndex]->GetViewMatrix();
+	//vertexShaderData.projection = cameras[activeCameraIndex]->GetProjectionMatrix();
 
 	// Bind the drawing input layout and primitive topology
 	Graphics::Context->IASetInputLayout(inputLayout.Get());	
@@ -455,54 +633,32 @@ void Game::Draw(float deltaTime, float totalTime)
 
 		// Get the entity's mesh and transform
 		vertexShaderData.world = entity->GetTransform()->GetWorldMatrix();
+		vertexShaderData.view = cameras[activeCameraIndex]->GetViewMatrix();
+		vertexShaderData.projection = cameras[activeCameraIndex]->GetProjectionMatrix();
 
-		// Map -> memcpy -> Unmap sequence
-		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-
-		Graphics::Context->Map(
-			vertexShaderConstantBuffer.Get(),	
-			0,									
-			D3D11_MAP_WRITE_DISCARD,			
-			0,									
-			&mappedBuffer						
-		);
-
-		memcpy(
-			mappedBuffer.pData,
+		// Upload and bind vertex shader with the constant buffer
+		FillAndBindNextConstantBuffer(
 			&vertexShaderData,
-			sizeof(VertexShaderData)
-		);
-
-		Graphics::Context->Unmap(
-			vertexShaderConstantBuffer.Get(),
+			sizeof(VertexShaderData),
+			D3D11_SHVER_VERTEX_SHADER,
 			0
 		);
 
-		// Send the entity's material to the pixel shader
+		// Update the pixel shader data
 		pixelShaderData.colorTint = material->GetColorTint();
+		pixelShaderData.uvScale = material->GetUVSccale();
+		pixelShaderData.uvOffset = material->GetUVOffset();
 
-		// Map -> memcpy -> Unmap sequence for pixel shader
-		D3D11_MAPPED_SUBRESOURCE mappedPSBuffer = {};
-
-		Graphics::Context->Map(
-			pixelShaderConstantBuffer.Get(),
-			0,
-			D3D11_MAP_WRITE_DISCARD,
-			0,
-			&mappedPSBuffer
-		);
-
-		memcpy(
-			mappedPSBuffer.pData,
+		// Upload and bind pixel shader with the constant buffer
+		FillAndBindNextConstantBuffer(
 			&pixelShaderData,
-			sizeof(PixelShaderData)
-		);
-
-		Graphics::Context->Unmap(
-			pixelShaderConstantBuffer.Get(),
+			sizeof(PixelShaderData),
+			D3D11_SHVER_PIXEL_SHADER,
 			0
 		);
 
+		// Bind textures and samplers
+		material->BindTexturesAndSamplers();
 
 		entity->Draw();
 	}	
