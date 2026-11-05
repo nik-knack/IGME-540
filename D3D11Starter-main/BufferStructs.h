@@ -1,5 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
+#include "Lights.h"
 
 struct VertexShaderData {
 	DirectX::XMFLOAT4X4 world;
@@ -15,4 +16,6 @@ struct PixelShaderData {
 	DirectX::XMFLOAT3 cameraPosition;
 	float padding;
 	DirectX::XMFLOAT3 ambientColor;
+	float padding2; 
+	Light lights[6];
 };

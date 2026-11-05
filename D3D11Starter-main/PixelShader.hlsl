@@ -7,6 +7,7 @@ cbuffer ExternalData : register(b0)
     float2 uvOffset;
     float3 cameraPosition;
     float3 ambientColor;
+    Light lights[6];
 };
 
 Texture2D SurfaceTexture : register(t0);
@@ -33,6 +34,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 ambient = ambientColor * surfaceColor;
 	
     //return surfaceColor * colorTint;
-    return float4(input.normal, 1);
+    //return float4(input.normal, 1);
+    return float4(lights[0].Color, 1);
 
 }

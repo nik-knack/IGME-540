@@ -214,6 +214,61 @@ Game::Game()
 	entities[19]->GetTransform()->SetPosition(6.0f, -3.0f, 0.0f);
 	entities[20]->GetTransform()->SetPosition(9.0f, -3.0f, 0.0f);
 
+	// Create lights
+	// Red light pointing forward
+	Light dir1 = {};
+	dir1.Type = LIGHT_TYPE_DIRECTIONAL;
+	XMStoreFloat3(&dir1.Direction, XMVector3Normalize(XMVectorSet(1, 0, 0.5f, 0)));
+	dir1.Color = XMFLOAT3(1, 0, 0);
+	dir1.Intensity = 1.0f;
+	lights.push_back(dir1);
+
+	// White light pointing down
+	Light dir2 = {};
+	dir2.Type = LIGHT_TYPE_DIRECTIONAL;
+	XMStoreFloat3(&dir2.Direction, XMVector3Normalize(XMVectorSet(-0.1f, -1, 0, 0)));
+	dir2.Color = XMFLOAT3(0, 1, 0);
+	dir2.Intensity = 1.0f;
+	lights.push_back(dir2);
+
+	// White light pointing up at an angle
+	Light dir3 = {};
+	dir3.Type = LIGHT_TYPE_DIRECTIONAL;
+	XMStoreFloat3(&dir3.Direction, XMVector3Normalize(XMVectorSet(-1, 1, -0.5f, 0)));
+	dir3.Color = XMFLOAT3(1, 1, 1);
+	dir3.Intensity = 0.5f;
+	lights.push_back(dir3);
+
+	// White light
+	Light point1 = {};
+	point1.Type = LIGHT_TYPE_POINT;
+	point1.Position = XMFLOAT3(-1.5f, 0, -2);
+	point1.Color = XMFLOAT3(1, 1, 1);
+	point1.Intensity = 1.0f;
+	point1.Range = 10.0f;
+	lights.push_back(point1);
+
+	// Green light
+	Light point2 = {};	
+	point2.Type = LIGHT_TYPE_POINT;
+	point2.Position = XMFLOAT3(1.5f, 0, -2);
+	point2.Color = XMFLOAT3(0, 1, 0);
+	point2.Intensity = 1.0f;
+	point2.Range = 10.0f;
+	lights.push_back(point2);
+
+	// Blue light pointing down
+	Light spot1 = {};
+	spot1.Type = LIGHT_TYPE_SPOT;
+	spot1.Position = XMFLOAT3(3, 3, -3);
+	spot1.Direction = XMFLOAT3(0, -1, 0);
+	spot1.Range = 15.0f;
+	spot1.Color = XMFLOAT3(0, 0, 1);
+	spot1.Intensity = 2.0f;
+	spot1.SpotInnerAngle = DirectX::XMConvertToRadians(20.0f);
+	spot1.SpotOuterAngle = DirectX::XMConvertToRadians(30.0f);
+	lights.push_back(spot1);
+
 	// Set initial graphics API state
 	//  - These settings persist until we change them
 	//  - Some of these, like the primitive topology & input layout, probably won't change
@@ -620,6 +675,10 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Bind the drawing input layout and primitive topology
 	Graphics::Context->IASetInputLayout(inputLayout.Get());	
 	Graphics::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// Lights and ambient color are shared by all entities
+	pixelShaderData.ambientColor = ambientColor;
+	memcpy(&pixelShaderData.lights, &lights[0], sizeof(Light) * lights.size());
 
 	// Draw each game entity
 	for (const auto& entity : entities)
