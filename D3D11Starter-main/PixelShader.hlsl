@@ -31,10 +31,24 @@ float4 main(VertexToPixel input) : SV_TARGET
 	
 	// Sample texture
     float3 surfaceColor = SurfaceTexture.Sample(BasicSampler, adjustedUV).rgb * colorTint.rgb;
-    float3 ambient = ambientColor * surfaceColor;
-	
-    //return surfaceColor * colorTint;
-    //return float4(input.normal, 1);
-    return float4(lights[0].Color, 1);
-
+    float3 total = ambientColor * surfaceColor;
+    
+    for (int i = 0; i < 6; i++)
+    {
+        Light light = lights[i];
+        switch (light.Type)
+        {
+            case 0:
+                total += DirectionalLight(light, input.normal, input.worldPosition, cameraPosition, surfaceColor);
+                break;
+            case 1:
+                total += PointLight(light, input.normal, input.worldPosition, cameraPosition, surfaceColor);
+                break;
+            case 2:
+                total += SpotLight(light, input.normal, input.worldPosition, cameraPosition, surfaceColor);
+                break;
+        }
+    }
+    
+    return float4(total, 1);
 }

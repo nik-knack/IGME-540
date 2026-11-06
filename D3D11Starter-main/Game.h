@@ -98,7 +98,7 @@ private:
 		D3D11_SHADER_VERSION_TYPE shaderType,
 		unsigned int registerSlot);
 
-	DirectX::XMFLOAT3 ambientColor = DirectX::XMFLOAT3(0.1f, 0.8f, 0.5f);
+	DirectX::XMFLOAT3 ambientColor = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	// Store lights
 	std::vector<Light> lights;

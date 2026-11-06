@@ -512,140 +512,13 @@ void Game::Update(float deltaTime, float totalTime)
 		cameras[activeCameraIndex]->Update(deltaTime);
 	}
 
+	for (auto& entity : entities)
+	{
+		entity->GetTransform()->Rotate(0.0f, deltaTime, 0.0f);
+	}
+
 	// Call helper method to update ImGui
 	Game::ImGuiUpdate(deltaTime);
-
-	if (showDemoWindow)
-	{
-		ImGui::ShowDemoWindow();
-	}
-
-	ImGui::Begin("Inspector"); // Everything after is part of the window
-	
-	if (ImGui::TreeNode("App Details")) {
-		ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
-		ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
-		ImGui::TreePop();
-		if (ImGui::Button(showDemoWindow
-			? "Hide ImGui Demo Window"
-			: "Show ImGui Demo Window"))
-		{
-			showDemoWindow = !showDemoWindow;
-		}
-	}
-
-	if (ImGui::TreeNode("Materials"))
-	{	
-		for (int i = 0; i < static_cast<int>(materials.size()); i++)
-		{
-			ImGui::PushID(i);
-
-			std::string materialName = "Material" + std::to_string(i + 1);
-
-			auto material = materials[i];
-
-			if (ImGui::TreeNode(materialName.c_str()))
-			{
-				// Color tint
-				DirectX::XMFLOAT4 tint = material->GetColorTint();
-
-				if (ImGui::ColorEdit4("Color Tint", &tint.x))
-				{
-					material->SetColorTint(tint);
-				}
-
-				// UV Scale
-				DirectX::XMFLOAT2 scale = material->GetUVSccale();
-
-				if (ImGui::DragFloat2("UV Scale", &scale.x, 0.05f))
-				{
-					material->SetUVScale(scale);
-				}
-
-				// UV Offset
-				DirectX::XMFLOAT2 offset = material->GetUVOffset();
-
-				if (ImGui::DragFloat2("UV Offset", &offset.x, 0.01f))
-				{
-					material->SetUVOffset(offset);
-				}
-
-				ImGui::TreePop();
-			}
-			ImGui::PopID();
-		}
-		ImGui::TreePop();
-	}
-
-	for (int i = 0; i < entities.size(); i++) 
-	{
-		ImGui::PushID(i);
-
-		std::string entityName = "Entity " + std::to_string(i + 1);
-
-		if (ImGui::TreeNode(entityName.c_str())) 
-		{
-			Transform* transform = entities[i]->GetTransform();
-			XMFLOAT3 position = transform->GetPosition();
-			XMFLOAT3 rotation = transform->GetRotation();
-			XMFLOAT3 scale = transform->GetScale();
-
-			if (ImGui::DragFloat3("Position", &position.x, 0.1f))
-			{
-				transform->SetPosition(position);
-			}
-
-			if (ImGui::DragFloat3("Rotation", &rotation.x, 0.1f))
-			{
-				transform->SetRotation(rotation);
-			}
-
-			if (ImGui::DragFloat3("Scale", &scale.x, 0.1f))
-			{
-				transform->SetScale(scale);
-			}
-
-			ImGui::TreePop();
-		}
-		ImGui::PopID();
-	}
-
-	if (ImGui::TreeNode("Cameras")) {
-
-		for (int i = 0; i < cameras.size(); i++)
-		{
-			std::string cameraName = "Camera " + std::to_string(i + 1);
-
-			// Update camera based on user input
-			if (ImGui::RadioButton(cameraName.c_str(), activeCameraIndex == i))
-			{
-				activeCameraIndex = i;
-			}
-		}
-
-		if (!cameras.empty() && activeCameraIndex >= 0 && activeCameraIndex < cameras.size())
-		{
-			std::shared_ptr<Camera> activeCamera = cameras[activeCameraIndex];
-
-			ImGui::Separator();
-
-			ImGui::Text("Active Camera Details: %d", activeCameraIndex + 1);
-
-			// Display the active camera's position and rotation
-			DirectX::XMFLOAT3 position = activeCamera->GetTransform()->GetPosition();
-			
-			ImGui::Text("Position: (%.2f, %.2f, %.2f)", position.x, position.y, position.z);
-
-			// Display the field of view
-			ImGui::Text("Field of View: %.2f degrees", DirectX::XMConvertToDegrees(activeCamera->GetFieldOfView()));
-
-		}
-
-
-		ImGui::TreePop();
-	}
-
-	ImGui::End(); // Ends the current window
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
@@ -763,6 +636,157 @@ void Game::ImGuiUpdate(float deltaTime) {
 	// Determine new input capture
 	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
 	Input::SetMouseCapture(io.WantCaptureMouse);
+
+	if (showDemoWindow)
+	{
+		ImGui::ShowDemoWindow();
+	}
+
+	ImGui::Begin("Inspector"); // Everything after is part of the window
+
+	if (ImGui::TreeNode("App Details")) {
+		ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
+		ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
+		ImGui::TreePop();
+		if (ImGui::Button(showDemoWindow
+			? "Hide ImGui Demo Window"
+			: "Show ImGui Demo Window"))
+		{
+			showDemoWindow = !showDemoWindow;
+		}
+	}
+
+	if (ImGui::TreeNode("Lights"))
+	{
+		ImGui::ColorEdit3("Ambient Color", &ambientColor.x);
+
+		for (int i = 0; i < (int)lights.size(); i++)
+		{
+			ImGui::PushID(i);
+
+			if (ImGui::TreeNode(("Light " + std::to_string(i + 1)).c_str()))
+			{
+				ImGui::ColorEdit3("Color", &lights[i].Color.x);
+				ImGui::DragFloat("Intensity", &lights[i].Intensity, 0.5f, 0.0f, 10.0f);
+				ImGui::TreePop();
+			}
+			ImGui::PopID();
+		}
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Materials"))
+	{
+		for (int i = 0; i < static_cast<int>(materials.size()); i++)
+		{
+			ImGui::PushID(i);
+
+			std::string materialName = "Material" + std::to_string(i + 1);
+
+			auto material = materials[i];
+
+			if (ImGui::TreeNode(materialName.c_str()))
+			{
+				// Color tint
+				DirectX::XMFLOAT4 tint = material->GetColorTint();
+
+				if (ImGui::ColorEdit4("Color Tint", &tint.x))
+				{
+					material->SetColorTint(tint);
+				}
+
+				// UV Scale
+				DirectX::XMFLOAT2 scale = material->GetUVSccale();
+
+				if (ImGui::DragFloat2("UV Scale", &scale.x, 0.05f))
+				{
+					material->SetUVScale(scale);
+				}
+
+				// UV Offset
+				DirectX::XMFLOAT2 offset = material->GetUVOffset();
+
+				if (ImGui::DragFloat2("UV Offset", &offset.x, 0.01f))
+				{
+					material->SetUVOffset(offset);
+				}
+
+				ImGui::TreePop();
+			}
+			ImGui::PopID();
+		}
+		ImGui::TreePop();
+	}
+
+	for (int i = 0; i < entities.size(); i++)
+	{
+		ImGui::PushID(i);
+
+		std::string entityName = "Entity " + std::to_string(i + 1);
+
+		if (ImGui::TreeNode(entityName.c_str()))
+		{
+			Transform* transform = entities[i]->GetTransform();
+			XMFLOAT3 position = transform->GetPosition();
+			XMFLOAT3 rotation = transform->GetRotation();
+			XMFLOAT3 scale = transform->GetScale();
+
+			if (ImGui::DragFloat3("Position", &position.x, 0.1f))
+			{
+				transform->SetPosition(position);
+			}
+
+			if (ImGui::DragFloat3("Rotation", &rotation.x, 0.1f))
+			{
+				transform->SetRotation(rotation);
+			}
+
+			if (ImGui::DragFloat3("Scale", &scale.x, 0.1f))
+			{
+				transform->SetScale(scale);
+			}
+
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
+	}
+
+	if (ImGui::TreeNode("Cameras")) {
+
+		for (int i = 0; i < cameras.size(); i++)
+		{
+			std::string cameraName = "Camera " + std::to_string(i + 1);
+
+			// Update camera based on user input
+			if (ImGui::RadioButton(cameraName.c_str(), activeCameraIndex == i))
+			{
+				activeCameraIndex = i;
+			}
+		}
+
+		if (!cameras.empty() && activeCameraIndex >= 0 && activeCameraIndex < cameras.size())
+		{
+			std::shared_ptr<Camera> activeCamera = cameras[activeCameraIndex];
+
+			ImGui::Separator();
+
+			ImGui::Text("Active Camera Details: %d", activeCameraIndex + 1);
+
+			// Display the active camera's position and rotation
+			DirectX::XMFLOAT3 position = activeCamera->GetTransform()->GetPosition();
+
+			ImGui::Text("Position: (%.2f, %.2f, %.2f)", position.x, position.y, position.z);
+
+			// Display the field of view
+			ImGui::Text("Field of View: %.2f degrees", DirectX::XMConvertToDegrees(activeCamera->GetFieldOfView()));
+
+		}
+
+		ImGui::TreePop();
+	}
+
+	ImGui::End(); // Ends the current window
 }
 
 // Helper method to load shaders

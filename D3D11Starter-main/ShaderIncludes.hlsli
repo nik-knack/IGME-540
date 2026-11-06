@@ -45,10 +45,38 @@ float Diffuse(float3 normal, float3 dirToLight)
     return saturate(dot(normal, dirToLight));
 }
 
-float SpecularPhong(float3 normal, float3 dirToLight, float3 dirToCamera, float shininess)
+float SpecularPhong(float3 normal, float3 dirFromLight, float3 dirToCamera, float shininess)
 {
-    float3 reflected = reflect(dirToLight, normal);
+    float3 reflected = reflect(dirFromLight, normal);
     return pow(saturate(dot(reflected, dirToCamera)), shininess);
+}
+
+float3 DirectionalLight(Light light, float3 normal, float3 worldPos, float3 camPos, float3 surfaceColor)
+{
+    float3 dirFromLight = normalize(light.Direction);
+    float3 dirToCamera = normalize(camPos - worldPos);
+    float diff = Diffuse(normal, -dirFromLight);
+    float spec = SpecularPhong(normal, dirFromLight, dirToCamera, 128.0f);
+    return (diff * surfaceColor + spec) * light.Intensity * light.Color;
+}
+
+float3 PointLight(Light light, float3 normal, float3 worldPos, float3 camPos, float3 surfaceColor)
+{
+    float3 dirFromLight = normalize(worldPos - light.Position);
+    float3 dirToCamera = normalize(camPos - worldPos);
+    float diff = Diffuse(normal, -dirFromLight);
+    float spec = SpecularPhong(normal, dirFromLight, dirToCamera, 128.0f);
+    return (diff * surfaceColor + spec) * Attenuate(light, worldPos) * light.Intensity * light.Color;
+}
+
+float3 SpotLight(Light light, float3 normal, float3 worldPos, float3 camPos, float3 surfaceColor)
+{
+    float3 dirFromLight = normalize(worldPos - light.Position);
+    float pixelCos = saturate(dot(dirFromLight, normalize(light.Direction)));
+    float cosOuter = cos(light.SpotOuterAngle);
+    float cosInner = cos(light.SpotInnerAngle);
+    float falloff = saturate((pixelCos - cosOuter) / (cosInner - cosOuter));
+    return PointLight(light, normal, worldPos, camPos, surfaceColor) * falloff;
 }
 
 #endif
