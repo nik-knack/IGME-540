@@ -10,6 +10,7 @@ struct VertexShaderInput
     float3 localPosition    : POSITION; 
     float2 uv               : TEXCOORD0; 
     float3 normal           : NORMAL0; 
+    float3 tangent          : TANGENT0;
 };
 
 struct VertexToPixel
@@ -17,6 +18,7 @@ struct VertexToPixel
     float4 screenPosition   : SV_POSITION;
     float2 uv               : TEXCOORD0;
     float3 normal           : NORMAL0;
+    float3 tangent          : TANGENT0;
     float3 worldPosition    : TEXCOORD1;
 };
 
@@ -31,6 +33,12 @@ struct Light
     float   SpotInnerAngle;
     float   SpotOuterAngle;
     float2  Padding;
+};
+
+struct VertexToPixel_Sky
+{
+    float4 position         : SV_POSITION;
+    float3 sampleDir        : DIRECTION;
 };
 
 float Attenuate(Light light, float3 worldPos)

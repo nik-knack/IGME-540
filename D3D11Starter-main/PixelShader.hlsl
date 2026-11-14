@@ -12,6 +12,7 @@ cbuffer ExternalData : register(b0)
 
 Texture2D SurfaceTexture : register(t0);
 SamplerState BasicSampler : register(s0);
+Texture2D NormalMap : register(t1);
 
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
@@ -24,7 +25,14 @@ SamplerState BasicSampler : register(s0);
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-    input.normal = normalize(input.normal);
+    float3 N = normalize(input.normal);
+    float3 T = normalize(input.tangent);
+    T = normalize(T - dot(T, N) * N);
+    float3 B = cross(T, N);
+    float3x3 TBN = float3x3(T, B, N);
+    
+    float3 unpackedNormal = NormalMap.Sample(BasicSampler, input.uv * uvScale + uvOffset).rgb * 2.0f - 1.0f;
+    input.normal = normalize(mul(unpackedNormal, TBN));
     
     // Scale and offset the UV coords
     float2 adjustedUV = input.uv * uvScale + uvOffset;

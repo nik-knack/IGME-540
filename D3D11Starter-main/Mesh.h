@@ -31,5 +31,7 @@ private:
 	
 	unsigned int vertexCount;
 	unsigned int indexCount;
+
+	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 };
 
