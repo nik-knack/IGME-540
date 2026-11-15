@@ -11,6 +11,7 @@
 #include "BufferStructs.h"
 #include "GameEntity.h"
 #include "Camera.h"
+#include "Sky.h"
 
 class Game
 {
@@ -102,5 +103,8 @@ private:
 
 	// Store lights
 	std::vector<Light> lights;
+
+	// Store the skybox
+	std::shared_ptr<Sky> sky;
 };
 

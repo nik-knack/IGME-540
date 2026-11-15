@@ -19,3 +19,8 @@ struct PixelShaderData {
 	float padding2; 
 	Light lights[6];
 };
+
+struct SkyVertexShaderData {
+	DirectX::XMFLOAT4X4 view;
+	DirectX::XMFLOAT4X4 projection;
+};

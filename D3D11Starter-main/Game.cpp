@@ -1,4 +1,4 @@
-	#include "Game.h"
+#include "Game.h"
 #include "Graphics.h"
 #include "Vertex.h"
 #include "Input.h"
@@ -91,25 +91,6 @@ Game::Game()
 	// Camera 0 is the active camera 
 	activeCameraIndex = 0;
 
-	// Load textures
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fabricTexture;
-	DirectX::CreateWICTextureFromFile(
-		Graphics::Device.Get(),
-		Graphics::Context.Get(),
-		FixPath(L"../../Assets/Textures/fabric_pattern.png").c_str(),
-		0,
-		fabricTexture.GetAddressOf()
-	);
-
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cuddlyTexture;
-	DirectX::CreateWICTextureFromFile(
-		Graphics::Device.Get(),
-		Graphics::Context.Get(),
-		FixPath(L"../../Assets/Textures/cuddly_teddy.jpg").c_str(),
-		0,
-		cuddlyTexture.GetAddressOf()
-	);
-
 	// Create the sampler state
 	D3D11_SAMPLER_DESC samplerDesc = {};
 
@@ -133,6 +114,89 @@ Game::Game()
 		throw std::runtime_error("Failed to create texture sampler");
 	}
 
+	// Load textures
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fabricTexture;
+	//DirectX::CreateWICTextureFromFile(
+	//	Graphics::Device.Get(),
+	//	Graphics::Context.Get(),
+	//	FixPath(L"../../Assets/Textures/fabric_pattern.png").c_str(),
+	//	0,
+	//	fabricTexture.GetAddressOf()
+	//);
+
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cuddlyTexture;
+	//DirectX::CreateWICTextureFromFile(
+	//	Graphics::Device.Get(),
+	//	Graphics::Context.Get(),
+	//	FixPath(L"../../Assets/Textures/cuddly_teddy.jpg").c_str(),
+	//	0,
+	//	cuddlyTexture.GetAddressOf()
+	//);
+
+	// Load normal map textures
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobblestoneTexture, cobblestoneNormals;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionTexture, cushionNormals;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockTexture, rockNormals;
+
+	DirectX::CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures with Normal Maps/cobblestone.png").c_str(),
+		0,
+		cobblestoneTexture.GetAddressOf()
+	);
+	DirectX::CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures with Normal Maps/cobblestone_normals.png").c_str(),
+		0,
+		cobblestoneNormals.GetAddressOf()
+	);
+
+
+	DirectX::CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures with Normal Maps/cushion.png").c_str(),
+		0,
+		cushionTexture.GetAddressOf()
+	);
+	DirectX::CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures with Normal Maps/cushion_normals.png").c_str(),
+		0,
+		cushionNormals.GetAddressOf()
+	);
+
+
+	DirectX::CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures with Normal Maps/rock.png").c_str(),
+		0,
+		rockTexture.GetAddressOf()
+	);
+	DirectX::CreateWICTextureFromFile(
+		Graphics::Device.Get(),
+		Graphics::Context.Get(),
+		FixPath(L"../../Assets/Textures with Normal Maps/rock_normals.png").c_str(),
+		0,
+		rockNormals.GetAddressOf()
+	);
+
+	// Load sky textures
+	sky = std::make_shared<Sky>(
+		meshes[0], sampler,
+		FixPath(L"../../Assets/Skies/Clouds Pink/right.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds Pink/left.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds Pink/up.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds Pink/down.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds Pink/front.png").c_str(),
+		FixPath(L"../../Assets/Skies/Clouds Pink/back.png").c_str(),
+		L"SkyVS.cso", L"SkyPS.cso"
+	);
+
 	// Load shaders
 	auto uvPS = LoadPixelShader(L"DebugUVsPS.cso");
 	auto normalPS = LoadPixelShader(L"DebugNormalsPS.cso");
@@ -148,20 +212,19 @@ Game::Game()
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 1, 0, 1), vertexShader, customPS));
 
 	// Fabric Material
-	materials[0]->AddTextureSRV(0, fabricTexture);
+	materials[0]->AddTextureSRV(0, cobblestoneTexture);
+	materials[0]->AddTextureSRV(1, cobblestoneNormals);
 	materials[0]->AddSampler(0, sampler);
 
 	// Cuddly Material
-	materials[1]->AddTextureSRV(0, cuddlyTexture);
+	materials[1]->AddTextureSRV(0, cushionTexture);
+	materials[1]->AddTextureSRV(1, cushionNormals);	
 	materials[1]->AddSampler(0, sampler);
 
 	// Combined Texture
-	materials[2]->AddTextureSRV(0, fabricTexture);
-	materials[2]->AddTextureSRV(1, cuddlyTexture);
+	materials[2]->AddTextureSRV(0, rockTexture);
+	materials[2]->AddTextureSRV(1, rockNormals);
 	materials[2]->AddSampler(0, sampler);
-
-	// Keep plain color material
-	materials[3]->SetColorTint(XMFLOAT4(0, 1, 0, 1));
 
 
 	// Creating game entities
@@ -185,9 +248,9 @@ Game::Game()
 	entities.push_back(std::make_shared<GameEntity>(meshes[1], materials[2]));
 	entities.push_back(std::make_shared<GameEntity>(meshes[2], materials[2]));
 	entities.push_back(std::make_shared<GameEntity>(meshes[3], materials[2]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[4], materials[3]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[5], materials[3]));
-	entities.push_back(std::make_shared<GameEntity>(meshes[6], materials[3]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[4], materials[2]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[5], materials[2]));
+	entities.push_back(std::make_shared<GameEntity>(meshes[6], materials[2]));
 
 	// Give each entity a different position
 	entities[0]->GetTransform()->SetPosition(-9.0f, 0.0f, 0.0f);
@@ -356,7 +419,7 @@ void Game::LoadShaders()
 	//  - Doing this NOW because it requires a vertex shader's byte code to verify against!
 	//  - Luckily, we already have that loaded (the vertex shader blob above)
 	{
-		D3D11_INPUT_ELEMENT_DESC inputElements[3] = {};
+		D3D11_INPUT_ELEMENT_DESC inputElements[4] = {};
 
 		// Set up the first element - a position, which is 3 float values
 		inputElements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;				// Most formats are described as color channels; really it just means "Three 32-bit floats"
@@ -372,6 +435,11 @@ void Game::LoadShaders()
 		inputElements[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;			// 4x 32-bit floats
 		inputElements[2].SemanticName = "NORMAL";							// Match our vertex shader input
 		inputElements[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
+
+		// Set up the fourth element - the tangent
+		inputElements[3].Format = DXGI_FORMAT_R32G32B32_FLOAT;			
+		inputElements[3].SemanticName = "TANGENT";							
+		inputElements[3].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT; 
 
 		// Create the input layout, verifying our description against actual shader code
 		Graphics::Device->CreateInputLayout(
@@ -582,7 +650,6 @@ void Game::Draw(float deltaTime, float totalTime)
 		pixelShaderData.uvScale = material->GetUVSccale();
 		pixelShaderData.uvOffset = material->GetUVOffset();
 		pixelShaderData.cameraPosition = cameras[activeCameraIndex]->GetTransform()->GetPosition();
-		pixelShaderData.ambientColor = DirectX::XMFLOAT3(0.0f, 0.8f, 0.5f);
 
 		// Upload and bind pixel shader with the constant buffer
 		FillAndBindNextConstantBuffer(
@@ -596,8 +663,19 @@ void Game::Draw(float deltaTime, float totalTime)
 		material->BindTexturesAndSamplers();
 
 		entity->Draw();
-	}	
+	}
 
+	// Draw the sky last so it appears behind everything else
+	SkyVertexShaderData skyData = {};
+	skyData.view = cameras[activeCameraIndex]->GetViewMatrix();
+	skyData.projection = cameras[activeCameraIndex]->GetProjectionMatrix();
+	FillAndBindNextConstantBuffer(
+		&skyData,
+		sizeof(skyData),
+		D3D11_SHVER_VERTEX_SHADER,
+		0
+	);
+	sky->Draw();
 
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME

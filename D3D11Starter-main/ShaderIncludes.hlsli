@@ -18,8 +18,8 @@ struct VertexToPixel
     float4 screenPosition   : SV_POSITION;
     float2 uv               : TEXCOORD0;
     float3 normal           : NORMAL0;
-    float3 tangent          : TANGENT0;
     float3 worldPosition    : TEXCOORD1;
+    float3 tangent          : TANGENT0;
 };
 
 struct Light
