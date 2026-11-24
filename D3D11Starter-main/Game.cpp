@@ -115,75 +115,33 @@ Game::Game()
 	}
 
 	// Load textures
-	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fabricTexture;
-	//DirectX::CreateWICTextureFromFile(
-	//	Graphics::Device.Get(),
-	//	Graphics::Context.Get(),
-	//	FixPath(L"../../Assets/Textures/fabric_pattern.png").c_str(),
-	//	0,
-	//	fabricTexture.GetAddressOf()
-	//);
+	auto LoadTex = [&](const wchar_t* path)
+	{
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv;
+		DirectX::CreateWICTextureFromFile(
+			Graphics::Device.Get(),
+			Graphics::Context.Get(),
+			FixPath(path).c_str(),
+			0,
+			srv.GetAddressOf()
+		);
+		return srv;
+	};
 
-	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cuddlyTexture;
-	//DirectX::CreateWICTextureFromFile(
-	//	Graphics::Device.Get(),
-	//	Graphics::Context.Get(),
-	//	FixPath(L"../../Assets/Textures/cuddly_teddy.jpg").c_str(),
-	//	0,
-	//	cuddlyTexture.GetAddressOf()
-	//);
+	auto woodAlbedo		= LoadTex(L"../../Assets/PBR/wood_albedo.png");
+	auto woodNormals	= LoadTex(L"../../Assets/PBR/wood_normals.png");
+	auto woodRoughness	= LoadTex(L"../../Assets/PBR/wood_roughness.png");
+	auto woodMetal		= LoadTex(L"../../Assets/PBR/wood_metal.png");
 
-	// Load normal map textures
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobblestoneTexture, cobblestoneNormals;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionTexture, cushionNormals;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockTexture, rockNormals;
+	auto paintAlbedo	= LoadTex(L"../../Assets/PBR/paint_albedo.png");
+	auto paintNormals	= LoadTex(L"../../Assets/PBR/paint_normals.png");
+	auto paintRoughness	= LoadTex(L"../../Assets/PBR/paint_roughness.png");
+	auto paintMetal		= LoadTex(L"../../Assets/PBR/paint_metal.png");
 
-	DirectX::CreateWICTextureFromFile(
-		Graphics::Device.Get(),
-		Graphics::Context.Get(),
-		FixPath(L"../../Assets/Textures with Normal Maps/cobblestone.png").c_str(),
-		0,
-		cobblestoneTexture.GetAddressOf()
-	);
-	DirectX::CreateWICTextureFromFile(
-		Graphics::Device.Get(),
-		Graphics::Context.Get(),
-		FixPath(L"../../Assets/Textures with Normal Maps/cobblestone_normals.png").c_str(),
-		0,
-		cobblestoneNormals.GetAddressOf()
-	);
-
-
-	DirectX::CreateWICTextureFromFile(
-		Graphics::Device.Get(),
-		Graphics::Context.Get(),
-		FixPath(L"../../Assets/Textures with Normal Maps/cushion.png").c_str(),
-		0,
-		cushionTexture.GetAddressOf()
-	);
-	DirectX::CreateWICTextureFromFile(
-		Graphics::Device.Get(),
-		Graphics::Context.Get(),
-		FixPath(L"../../Assets/Textures with Normal Maps/cushion_normals.png").c_str(),
-		0,
-		cushionNormals.GetAddressOf()
-	);
-
-
-	DirectX::CreateWICTextureFromFile(
-		Graphics::Device.Get(),
-		Graphics::Context.Get(),
-		FixPath(L"../../Assets/Textures with Normal Maps/rock.png").c_str(),
-		0,
-		rockTexture.GetAddressOf()
-	);
-	DirectX::CreateWICTextureFromFile(
-		Graphics::Device.Get(),
-		Graphics::Context.Get(),
-		FixPath(L"../../Assets/Textures with Normal Maps/rock_normals.png").c_str(),
-		0,
-		rockNormals.GetAddressOf()
-	);
+	auto scratchedAlbedo		= LoadTex(L"../../Assets/PBR/scratched_albedo.png");
+	auto scratchedNormals	= LoadTex(L"../../Assets/PBR/scratched_normals.png");
+	auto scratchedRoughness	= LoadTex(L"../../Assets/PBR/scratched_roughness.png");	
+	auto scratchedMetal		= LoadTex(L"../../Assets/PBR/scratched_metal.png");
 
 	// Load sky textures
 	sky = std::make_shared<Sky>(
@@ -203,27 +161,31 @@ Game::Game()
 	auto customPS = LoadPixelShader(L"CustomPS.cso");
 	auto combinedPS = LoadPixelShader(L"CombinedTexturePS.cso");
 
-	// Create a vector of materials for the meshes
-	//materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, uvPS));			
-	//materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, normalPS));	
+	// Create a vector of materials for the meshes	
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, pixelShader));
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, pixelShader));
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, combinedPS));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vertexShader, pixelShader));
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 1, 0, 1), vertexShader, customPS));
 
-	// Fabric Material
-	materials[0]->AddTextureSRV(0, cobblestoneTexture);
-	materials[0]->AddTextureSRV(1, cobblestoneNormals);
+	// Wood Material
+	materials[0]->AddTextureSRV(0, woodAlbedo);
+	materials[0]->AddTextureSRV(1, woodNormals);
+	materials[0]->AddTextureSRV(2, woodRoughness);
+	materials[0]->AddTextureSRV(3, woodMetal);
 	materials[0]->AddSampler(0, sampler);
 
-	// Cuddly Material
-	materials[1]->AddTextureSRV(0, cushionTexture);
-	materials[1]->AddTextureSRV(1, cushionNormals);	
+	// Paint Material
+	materials[1]->AddTextureSRV(0, paintAlbedo);
+	materials[1]->AddTextureSRV(1, paintNormals);
+	materials[1]->AddTextureSRV(2, paintRoughness);
+	materials[1]->AddTextureSRV(3, paintMetal);
 	materials[1]->AddSampler(0, sampler);
 
-	// Combined Texture
-	materials[2]->AddTextureSRV(0, rockTexture);
-	materials[2]->AddTextureSRV(1, rockNormals);
+	// Scratched Texture
+	materials[2]->AddTextureSRV(0, scratchedAlbedo);
+	materials[2]->AddTextureSRV(1, scratchedNormals);
+	materials[2]->AddTextureSRV(2, scratchedRoughness);
+	materials[2]->AddTextureSRV(3, scratchedMetal);
 	materials[2]->AddSampler(0, sampler);
 
 
