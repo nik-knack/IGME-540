@@ -877,6 +877,3 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> Game::LoadPixelShader(const std::wstri
 	
 	return ps;
 }
-
-
-
